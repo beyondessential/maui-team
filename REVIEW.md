@@ -11,11 +11,11 @@ Maui team baseline for Claude Code reviews. Individual repos can override by pla
 - Edge cases not handled (nulls, empty inputs, out-of-range values)
 - Data type mismatches or implicit conversions
 
-**Security**
-- Hardcoded credentials, API keys, passwords, or tokens → **BLOCK**
-- Committed `.env` or secrets files → **BLOCK**
-- PII exposed in code, examples, or logs → **BLOCK**
-- Unmasked secrets in log statements → **BLOCK**
+**Security** — BLOCK and request immediate changes if any of the following are found:
+- Hardcoded credentials, API keys, passwords, or tokens
+- Committed `.env` or secrets files
+- PII exposed in code, examples, or logs
+- Unmasked secrets in log statements
 
 **Data integrity**
 - Transformations that could silently drop or duplicate records

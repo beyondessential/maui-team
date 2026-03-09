@@ -60,16 +60,4 @@ jobs:
           prompt: "/review"
           claude_args: |
             --allowedTools "Read,Grep,Glob,Bash(gh pr *),Bash(gh api*),Bash(git diff*),Bash(git log*)"
-            --append-system-prompt "Read ${{ steps.review.outputs.path }} first — it defines what to check, severity levels, what not to flag, and any project-specific testing instructions.
-
-            Keep the sticky summary comment brief: overall verdict (✅ approved or ⚠️ issues found), count of blockers/suggestions/nits, and a regression testing checklist (commands only). All specific feedback belongs in inline comments — do not repeat issue details in the summary.
-
-            BLOCK and request immediate changes if any of the following are found:
-            - Hardcoded credentials, API keys, passwords, or tokens
-            - Committed .env or secrets files
-            - PII in code or examples
-            - Unmasked secrets in log statements
-
-            PR TITLE: If the title is vague or auto-generated, update it to a conventional commit title (feat/fix/chore/refactor/docs) using: gh pr edit ${{ steps.pr.outputs.number }} --title 'improved title here'
-
-            INLINE COMMENTS: Post all specific feedback as inline review comments using: gh api repos/${{ github.repository }}/pulls/${{ steps.pr.outputs.number }}/comments --method POST --field body='your comment' --field commit_id='${{ steps.pr.outputs.sha }}' --field path='relative/file/path' --field line=LINE_NUMBER --field side='RIGHT'"
+            --append-system-prompt "Read ${{ steps.review.outputs.path }} and follow all instructions in it."
