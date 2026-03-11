@@ -1,0 +1,63 @@
+name: Claude Code Review
+
+on:
+  workflow_call:
+
+jobs:
+  claude-review:
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'pull_request' ||
+        (github.event_name == 'issue_comment' &&
+        github.event.issue.pull_request != null &&
+        contains(github.event.comment.body, '/review') &&
+        github.event.comment.author_association != 'NONE' &&
+        github.event.comment.author_association != 'FIRST_TIME_CONTRIBUTOR')
+    concurrency:
+      group: claude-review-${{ github.event.pull_request.number || github.event.issue.number }}
+      cancel-in-progress: true
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: read
+      id-token: write
+      actions: read
+
+    steps:
+      - name: Resolve PR metadata
+        id: pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_NUMBER="${{ github.event.pull_request.number || github.event.issue.number }}"
+          PR_SHA=$(gh api repos/${{ github.repository }}/pulls/$PR_NUMBER --jq '.head.sha')
+          echo "number=$PR_NUMBER" >> $GITHUB_OUTPUT
+          echo "sha=$PR_SHA" >> $GITHUB_OUTPUT
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.pr.outputs.sha }}
+          fetch-depth: 0
+          submodules: true
+
+      - name: Resolve review reference file
+        id: review
+        run: |
+          if [ -f "REVIEW.md" ]; then
+            echo "path=REVIEW.md" >> $GITHUB_OUTPUT
+          else
+            echo "path=.maui/REVIEW.md" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run Claude Code Review
+        uses: anthropics/claude-code-action@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          track_progress: true
+          use_sticky_comment: true
+          prompt: "/review"
+          claude_args: |
+            --allowedTools "Read,Grep,Glob,Bash(gh pr *),Bash(gh api*),Bash(git diff*),Bash(git log*)"
+            --append-system-prompt "Read ${{ steps.review.outputs.path }} and follow all instructions in it."
