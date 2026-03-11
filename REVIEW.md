@@ -66,7 +66,7 @@ If the title is vague or auto-generated, update it to conventional commit format
 <type>(<scope>): <short description>
 ```
 
-Types: `feat`, `fix`, `chore`, `refactor`, `docs`, `test`
+Types: `feature`, `fix`, `hotfix`, `chore`, `refactor`, `docs`
 
 ```bash
 gh pr edit <number> --title 'improved title here'
