@@ -16,6 +16,15 @@ sources/logs → bases → surveys → datasets → reports
 | `datasets` | Denormalised, user-friendly views; joins across bases and surveys | `ds__<description>` | No `order by` |
 | `reports` | Apply translations, date formatting, report configs; final output | `<description>_line_list` | `order by` allowed |
 
+## Materialisations
+
+| Type | When to use |
+|------|-------------|
+| `view` | Fast build, slow query — default for lightweight models |
+| `table` | Slow build, fast query — use for frequently queried models |
+| `incremental` | Large, append-only datasets |
+| `ephemeral` | Reusable logic with no direct materialisation |
+
 ## File naming
 
 - Model SQL: `<model_name>.sql`

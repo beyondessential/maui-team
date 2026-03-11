@@ -26,6 +26,10 @@ The rules below cover what ruff cannot enforce.
 - Use `from __future__ import annotations` for forward references
 - Prefer `X | None` over `Optional[X]` (Python 3.10+)
 
+## Docstrings
+
+Use Google-style docstrings. Only add them where they aid understanding — omit on trivial functions.
+
 ## Functions and classes
 
 - Keep functions focused on a single responsibility

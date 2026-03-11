@@ -53,6 +53,12 @@
 | Sensors | `snake_case` with `_sensor` suffix | `s3_arrival_sensor` |
 | Resources | `snake_case` noun | `postgres_resource` |
 
+## Logging
+
+- Keep log messages concise: `context.log.info("Fetched 1234 records")` not verbose narratives
+- Mask secrets in log output: `key[:4] + "****"`
+- Never log raw credentials, tokens, or PII
+
 ## Project-specific conventions
 
 Add repo-specific asset groupings, resource configurations, or partition strategies in the repo's `AGENT.md`.
