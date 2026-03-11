@@ -33,6 +33,7 @@ jobs:
           ref: ${{ steps.pr.outputs.sha }}
           fetch-depth: 0
           submodules: true
+          token: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
 
       - name: Resolve review reference file
         id: review
