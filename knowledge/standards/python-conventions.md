@@ -1,10 +1,14 @@
 # Python Conventions
 
-## Style
+Formatting, import ordering, and common errors are enforced by ruff — see `ruff.toml` at the repo root. Consuming repos extend it via:
 
-- Follow PEP 8; use `ruff` for linting and formatting
-- Line length: 88 characters (ruff/black default)
-- Use double quotes for strings
+```toml
+# ruff.toml
+extend = ".maui/ruff.toml"
+target-version = "py312"
+```
+
+The rules below cover what ruff cannot enforce.
 
 ## Naming
 
@@ -21,12 +25,6 @@
 - Annotate all function signatures (parameters and return types)
 - Use `from __future__ import annotations` for forward references
 - Prefer `X | None` over `Optional[X]` (Python 3.10+)
-
-## Imports
-
-- Group: stdlib → third-party → local, separated by blank lines
-- No wildcard imports (`from module import *`)
-- Prefer explicit imports over importing a module and accessing attributes
 
 ## Functions and classes
 

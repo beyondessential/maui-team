@@ -6,9 +6,25 @@
 <type>/<short-description>
 ```
 
-Types: `feature`, `fix`, `chore`, `refactor`, `docs`
+Types: `feature`, `fix`, `hotfix`, `chore`, `refactor`, `docs`
 
-Examples: `feature/patient-report`, `fix/translation-bug`, `chore/update-dependencies`
+- `hotfix` — urgent fix for a production deployment, typically targeting a version branch
+
+Examples: `feature/patient-report`, `fix/translation-bug`, `hotfix/missing-translation`, `chore/update-dependencies`
+
+## Version branches
+
+Maui manages multiple deployments running different versions. Long-running version branches are named by `<major>.<minor>`:
+
+```
+main      ← latest (e.g. 2.50.x)
+2.49      ← maintained for deployments on 2.49
+2.48      ← maintained for deployments on 2.48
+```
+
+- Cut short-lived work branches from the relevant version branch, not from `main`
+- Use `fix/` for normal fixes; `hotfix/` when the fix is urgent and targets a specific deployed version
+- Backport fixes to older version branches via cherry-pick or a separate PR against the version branch
 
 ## Commit messages
 
@@ -41,12 +57,12 @@ chore: update dbt-utils to 1.3.3
 ## Merge strategy
 
 - Squash merge preferred for feature branches (clean history)
-- Merge commit for long-running branches where commit history is meaningful
-- Never force-push to `main`
-- Rebase onto `main` before merging if the branch is behind
+- Merge commit for version branches where commit history is meaningful
+- Never force-push to `main` or version branches
+- Rebase onto the target branch before merging if the branch is behind
 
 ## Protected branches
 
-- `main` is protected in all repos
+- `main` and all version branches (e.g. `2.49`, `2.48`) are protected
 - Required checks must pass before merging
 - At least one human reviewer approval required
