@@ -4,13 +4,20 @@
 
 Runs Claude Code review on pull requests. Uses a repo-local `REVIEW.md` if present, otherwise falls back to `.maui/REVIEW.md`.
 
-### Caller requirements
+### Setup
 
-The calling repo must:
-1. Have this repo as a submodule at `.maui/` (for the fallback `REVIEW.md`)
-2. Have `ANTHROPIC_API_KEY` set as a repository secret
+**1. Add the submodule**
 
-### Usage
+```bash
+git submodule add https://github.com/<org>/maui-team .maui
+git commit -m "chore: add maui-team submodule"
+```
+
+**2. Add `ANTHROPIC_API_KEY` as a repository secret**
+
+In the repo: Settings → Secrets and variables → Actions → New repository secret.
+
+**3. Create the caller workflow**
 
 Create `.github/workflows/code-review.yml` in the consuming repo:
 
@@ -32,6 +39,13 @@ permissions:
 
 jobs:
   review:
+    if: >-
+      github.event_name == 'pull_request' ||
+        (github.event_name == 'issue_comment' &&
+        github.event.issue.pull_request != null &&
+        contains(github.event.comment.body, '/review') &&
+        github.event.comment.author_association != 'NONE' &&
+        github.event.comment.author_association != 'FIRST_TIME_CONTRIBUTOR')
     uses: <org>/maui-team/.github/workflows/claude-code-review.yml@main
     secrets: inherit
 ```
