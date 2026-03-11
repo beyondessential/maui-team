@@ -32,8 +32,13 @@ jobs:
         with:
           ref: ${{ steps.pr.outputs.sha }}
           fetch-depth: 0
-          submodules: true
-          token: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
+          submodules: false
+
+      - name: Checkout submodules
+        if: ${{ secrets.GH_PAT != '' }}
+        run: |
+          git config url."https://x-access-token:${{ secrets.GH_PAT }}@github.com/".insteadOf "https://github.com/"
+          git submodule update --init --recursive
 
       - name: Resolve review reference file
         id: review
