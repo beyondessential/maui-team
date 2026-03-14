@@ -2,23 +2,15 @@
 
 Central repository for shared AI assistant knowledge and reusable GitHub Actions workflows across Maui team repositories.
 
-## Repositories
-
-| Repository | Purpose |
-|------------|---------|
-| `data-lake` | Dagster orchestration; Tamanu analytics via dbt/Tupaia reporting; other data pipelines (FluTracking, NIWA) |
-| `data-staging` | Standard models for Tupaia reporting of Tamanu data (merging into `tamanu-source-dbt`) |
-| `tamanu-source-dbt` | Mono-repo for Tamanu and Tupaia reporting; includes base models used by `data-staging` |
-| `tamanu-dbt-*` | Deployment-specific Tamanu dbt models |
-| `fsm-data-migration` | Migration from FSM EHR to Tamanu |
-| `datatools` | CLI commands for data tasks in Tamanu/Tupaia |
-
 ## Structure
 
 ```
 maui-team/
 ├── REVIEW.md                       # Maui team Claude Code review reference
 ├── AGENT.md                        # AI context for this repo
+├── .sqlfluff                       # Canonical SQLFluff config (dbt) — symlink from consuming repos
+├── .sqlfluff-raw                   # Canonical SQLFluff config (raw SQL) — symlink from consuming repos
+├── ruff.toml                       # Base ruff config — extended by consuming repos
 ├── .github/workflows/              # Reusable GHA workflows
 └── knowledge/
     ├── AGENT.base.md               # Base AI context imported by all Maui repos
@@ -78,7 +70,23 @@ jobs:
     secrets: inherit
 ```
 
-**4. Add `CLAUDE.md` to `.gitignore`.** Each developer creates their own `CLAUDE.md` locally (not committed) containing just:
+**4. Set up linter configs** by symlinking to the canonical configs in `.maui/`:
+
+*dbt repos* — symlink `.sqlfluff` at the project root (or subdirectory):
+```bash
+HASH=$(printf '%s' '.maui/.sqlfluff' | git hash-object -w --stdin)
+git update-index --add --cacheinfo "120000,$HASH,.sqlfluff"
+printf '%s' '.maui/.sqlfluff' > .sqlfluff
+```
+
+*Python repos only* — create `ruff.toml` extending the base:
+```toml
+extend = ".maui/ruff.toml"
+```
+
+*Repos with raw (non-dbt) SQL* — symlink `.sqlfluff-raw` → `.maui/.sqlfluff-raw` using the same approach.
+
+**5. Add `CLAUDE.md` to `.gitignore`.** Each developer creates their own `CLAUDE.md` locally (not committed) containing just:
 
 ```
 @./AGENT.md
@@ -94,8 +102,4 @@ git submodule update --remote .maui
 
 ## Code review reference (REVIEW.md)
 
-`REVIEW.md` at the root of this repo is the Maui team baseline. The workflow uses a repo-local `REVIEW.md` if present, otherwise falls back to `.maui/REVIEW.md`.
-
-## Code review reference (REVIEW.md)
-
-`REVIEW.md` at the root of this repo is the Maui team baseline. Individual repos can override it by placing their own `REVIEW.md` at their root — a full replacement, so copy and extend as needed.
+`REVIEW.md` at the root of this repo is the Maui team baseline. Individual repos can override it by placing their own `REVIEW.md` at their root — a full replacement, so copy and extend as needed. The workflow uses a repo-local `REVIEW.md` if present, otherwise falls back to `.maui/REVIEW.md`.
