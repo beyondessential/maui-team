@@ -9,14 +9,14 @@ This repo provides shared AI assistant knowledge and reusable GHA workflows for 
 - `.github/workflows/` — reusable GHA workflows consumed via `uses:` in other repos.
 - `knowledge/AGENT.base.md` — base AI context imported by all Maui repos via the `.maui/` submodule.
 - `knowledge/standards/` — coding and tooling conventions (git, Python, SQL, dbt, Dagster, testing).
-- `knowledge/prompts/` — reusable prompt templates for common tasks.
-- `knowledge/architecture/` — Maui data platform architecture documentation.
-- `knowledge/runbooks/` — operational guides for known failure scenarios.
 
 ## Contributing
 
 ### Adding or updating standards
 Edit the relevant file in `knowledge/standards/`. Keep rules concise and actionable — these are read by AI assistants, not humans browsing docs.
+
+### Setting up a new repo
+See `README.md` for the full setup steps (submodule, AGENT.md, workflow, CLAUDE.md gitignore).
 
 ### Adding a reusable workflow
 Add a `.yml` file to `.github/workflows/` with `on: workflow_call`. Document inputs and secrets in `.github/workflows/README.md`.

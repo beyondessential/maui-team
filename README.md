@@ -22,38 +22,42 @@ maui-team/
 ├── .github/workflows/              # Reusable GHA workflows
 └── knowledge/
     ├── AGENT.base.md               # Base AI context imported by all Maui repos
-    ├── standards/                  # Coding and tooling conventions
+    └── standards/                  # Coding and tooling conventions
 ```
 
-## Using the knowledge base (git submodule)
+## Setting up a new repo
 
-Add this repo as a submodule at `.maui/` in any Maui repository:
+**1. Add the submodule:**
 
 ```bash
-git submodule add https://github.com/<org>/maui-team .maui
-git submodule update --init
+git submodule add https://github.com/beyondessential/maui-team .maui
 ```
 
-In the consuming repo's `AGENT.md`, import the shared base:
+**2. Create `AGENT.md`** — import the base, add relevant standards, and add repo-specific context:
 
 ```markdown
 @./.maui/knowledge/AGENT.base.md
+@./.maui/knowledge/standards/git-conventions.md
+@./.maui/knowledge/standards/dbt-conventions.md
+@./.maui/knowledge/standards/tamanu-conventions.md
+
+## Repository: <repo-name>
+
+<brief description and any repo-specific rules>
 ```
 
-Then add repo-specific context below the import.
+Choose standards based on the repo type:
 
-To update to the latest version:
+| Repo type | Standards |
+|-----------|-----------|
+| `tamanu-dbt-*`, `data-staging` | git, sql, dbt, tamanu |
+| `tamanu-source-dbt`, `data-lake` | git, sql, dbt, tamanu, dagster (data-lake only) |
+| `datatools` | git, python, testing |
 
-```bash
-git submodule update --remote .maui
-```
-
-## Using reusable workflows
-
-In any Maui repo, create `.github/workflows/code-review.yml`:
+**3. Create `.github/workflows/claude-code-review.yml`:**
 
 ```yaml
-name: Code Review
+name: Claude Code Review
 
 on:
   pull_request:
@@ -62,12 +66,35 @@ on:
     types: [created]
 
 jobs:
-  review:
-    uses: <org>/maui-team/.github/workflows/claude-code-review.yml@main
+  claude-review:
+    if: >-
+      github.event_name == 'pull_request' ||
+        (github.event_name == 'issue_comment' &&
+        github.event.issue.pull_request != null &&
+        contains(github.event.comment.body, '/review') &&
+        github.event.comment.author_association != 'NONE' &&
+        github.event.comment.author_association != 'FIRST_TIME_CONTRIBUTOR')
+    uses: beyondessential/maui-team/.github/workflows/claude-code-review.yml@main
     secrets: inherit
 ```
 
-The workflow uses a repo-local `REVIEW.md` if present, otherwise falls back to `.maui/REVIEW.md`.
+**4. Add `CLAUDE.md` to `.gitignore`.** Each developer creates their own `CLAUDE.md` locally (not committed) containing just:
+
+```
+@./AGENT.md
+```
+
+This is optional — only needed by developers using Claude Code.
+
+**To update the submodule to latest:**
+
+```bash
+git submodule update --remote .maui
+```
+
+## Code review reference (REVIEW.md)
+
+`REVIEW.md` at the root of this repo is the Maui team baseline. The workflow uses a repo-local `REVIEW.md` if present, otherwise falls back to `.maui/REVIEW.md`.
 
 ## Code review reference (REVIEW.md)
 

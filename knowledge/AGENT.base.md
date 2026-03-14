@@ -4,21 +4,24 @@ This file is imported by all Maui repositories via the `.maui/` submodule. It pr
 
 ## How to use in a repo
 
-Add to the top of the repo's `AGENT.md`:
+1. Add the `.maui` submodule:
+   ```bash
+   git submodule add https://github.com/beyondessential/maui-team .maui
+   ```
 
-```
-@./.maui/knowledge/AGENT.base.md
-```
+2. Create `AGENT.md` at the repo root. Import this file first, then add the relevant standards and repo-specific context:
+   ```
+   @./.maui/knowledge/AGENT.base.md
+   @./.maui/knowledge/standards/git-conventions.md
+   @./.maui/knowledge/standards/dbt-conventions.md
+   ```
+   Only import the standards relevant to the repo — don't import all of them.
 
-Then add repo-specific context below, including which standards files are relevant:
-
-```
-@./.maui/knowledge/standards/git-conventions.md
-@./.maui/knowledge/standards/python-conventions.md
-@./.maui/knowledge/standards/dbt-conventions.md
-```
-
-Only import the standards relevant to the repo — don't import all of them.
+3. Create a local `CLAUDE.md` (add to `.gitignore` — it is not committed) containing just:
+   ```
+   @./AGENT.md
+   ```
+   This is optional for each developer; those who don't use Claude Code don't need it.
 
 ---
 
