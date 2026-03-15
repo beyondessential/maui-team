@@ -8,9 +8,13 @@ This repo provides shared AI assistant knowledge and reusable GHA workflows for 
 - `AGENT.md` — this file. AI context for working on this repo itself.
 - `.github/workflows/` — reusable GHA workflows consumed via `uses:` in other repos.
 - `knowledge/AGENT.base.md` — base AI context imported by all Maui repos via the `.maui/` submodule.
+- `knowledge/runbooks/` — step-by-step operational guides.
 - `knowledge/standards/` — coding and tooling conventions (git, Python, SQL, dbt, Dagster, testing).
 
 ## Contributing
+
+### Adding or updating runbooks
+Add or edit files in `knowledge/runbooks/`. Runbooks cover setup/onboarding procedures and operational tasks (e.g. deployments, migrations, incident response). Use clear numbered steps; include prerequisites and verification steps where relevant. Runbooks may be followed by humans or AI agents.
 
 ### Adding or updating standards
 Edit the relevant file in `knowledge/standards/`. Keep rules concise and actionable — these are read by AI assistants, not humans browsing docs.

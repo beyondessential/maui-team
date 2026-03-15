@@ -14,6 +14,7 @@ maui-team/
 ├── .github/workflows/              # Reusable GHA workflows
 └── knowledge/
     ├── AGENT.base.md               # Base AI context imported by all Maui repos
+    ├── runbooks/                   # Step-by-step operational guides
     └── standards/                  # Coding and tooling conventions
 ```
 

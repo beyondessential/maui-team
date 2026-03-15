@@ -5,15 +5,22 @@ For SQL formatting rules (casing, aliases, formatting, joins), see `sql-conventi
 ## Model layers
 
 ```
-sources/logs → bases → surveys → datasets → reports
+sources ──┐                    ┌── surveys ──┐
+          ├── bases ── [int] ──┤             ├── [int] ── datasets ── [int] ── reports
+logs ─────┘                    └── facts ────┘
 ```
+
+`intermediate` is a flexible layer — it can appear between bases and surveys/facts, between surveys/facts and datasets, or between datasets and reports. Use it wherever shared logic would otherwise be duplicated.
 
 | Layer | Purpose | Naming | Notes |
 |-------|---------|--------|-------|
-| `sources/logs` | Raw external data — never modify | Defined in `sources.yml` | Managed externally or via package |
+| `sources` | Raw Tamanu tables | Defined in `sources.yml` | Managed externally — never modify |
+| `logs` | Raw log/event tables | Defined in `sources.yml` | Managed externally — never modify |
 | `bases` | Filter deleted records and test patients; minimal transformation | `<entity>` | Package-managed in `tamanu-source-dbt` |
 | `surveys` | Survey-specific models | `<survey_id>` | **Generated** — never edit manually; regenerate via script when definitions change. See repo `AGENT.md` for script path |
-| `datasets` | Denormalised, user-friendly views; joins across bases and surveys | `ds__<description>` | No `order by` |
+| `facts` | Event-grain models (counts, dates, measures) | `fct__<description>` | Sit alongside surveys; no `order by` |
+| `intermediate` | Shared joins and logic not exposed to end users; inserted where needed | `int__<description>` | Materialised as `ephemeral`; no `order by` |
+| `datasets` | Denormalised, user-friendly views; joins across bases, surveys, and facts | `ds__<description>` | No `order by` |
 | `reports` | Apply translations, date formatting, report configs; final output | `<description>_line_list` | `order by` allowed |
 
 ## Materialisations
