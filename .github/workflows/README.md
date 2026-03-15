@@ -1,44 +1,30 @@
 # Reusable Workflows
 
+See the [root README](../../README.md) for full new-repo setup instructions.
+
 ## claude-code-review.yml
 
 Runs Claude Code review on pull requests. Uses a repo-local `REVIEW.md` if present, otherwise falls back to `.maui/REVIEW.md`.
 
-### Setup
+### Secrets required
 
-**1. Add the submodule**
+`ANTHROPIC_API_KEY` — add as a repository secret in Settings → Secrets and variables → Actions.
 
-```bash
-git submodule add https://github.com/<org>/maui-team .maui
-git commit -m "chore: add maui-team submodule"
-```
+### Caller workflow
 
-**2. Add `ANTHROPIC_API_KEY` as a repository secret**
-
-In the repo: Settings → Secrets and variables → Actions → New repository secret.
-
-**3. Create the caller workflow**
-
-Create `.github/workflows/code-review.yml` in the consuming repo:
+Create `.github/workflows/claude-code-review.yml` in the consuming repo:
 
 ```yaml
-name: Code Review
+name: Claude Code Review
 
 on:
   pull_request:
-    types: [opened, reopened]
+    types: [opened, reopened, synchronize]
   issue_comment:
     types: [created]
 
-permissions:
-  contents: read
-  pull-requests: write
-  issues: read
-  id-token: write
-  actions: read
-
 jobs:
-  review:
+  claude-review:
     if: >-
       github.event_name == 'pull_request' ||
         (github.event_name == 'issue_comment' &&
@@ -46,7 +32,7 @@ jobs:
         contains(github.event.comment.body, '/review') &&
         github.event.comment.author_association != 'NONE' &&
         github.event.comment.author_association != 'FIRST_TIME_CONTRIBUTOR')
-    uses: <org>/maui-team/.github/workflows/claude-code-review.yml@main
+    uses: beyondessential/maui-team/.github/workflows/claude-code-review.yml@main
     secrets: inherit
 ```
 
@@ -65,7 +51,7 @@ In the repository's branch protection settings (Settings → Branches → Branch
 
 Keeps the `.maui` submodule up to date by running on every PR. If `.maui` is behind `main` in `maui-team`, the workflow updates it and pushes the commit directly onto the PR branch — no separate PR needed.
 
-### Setup
+### Caller workflow
 
 Create `.github/workflows/update-maui.yml` in the consuming repo:
 
