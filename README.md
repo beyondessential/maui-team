@@ -18,6 +18,20 @@ maui-team/
     └── standards/                  # Coding and tooling conventions
 ```
 
+## After cloning an existing repo
+
+Run this to initialise the `.maui` submodule, otherwise the `.sqlfluff` symlink will be broken and SQLFluff will fail:
+
+```bash
+git submodule update --init
+```
+
+Or clone with submodules from the start:
+
+```bash
+git clone --recurse-submodules <repo-url>
+```
+
 ## Setting up a new repo
 
 **1. Add the submodule:**
