@@ -71,22 +71,7 @@ jobs:
     secrets: inherit
 ```
 
-**4. Create `.github/workflows/update-maui.yml`:**
-
-```yaml
-name: Update .maui Submodule
-
-on:
-  pull_request:
-    types: [opened, reopened, synchronize]
-
-jobs:
-  update-submodule:
-    uses: beyondessential/maui-team/.github/workflows/update-submodule.yml@main
-    secrets: inherit
-```
-
-**5. Set up linter configs** by symlinking to the canonical configs in `.maui/`:
+**4. Set up linter configs** by symlinking to the canonical configs in `.maui/`:
 
 *dbt repos* — symlink `.sqlfluff` at the project root (or subdirectory):
 ```bash
@@ -102,7 +87,7 @@ extend = ".maui/ruff.toml"
 
 *Repos with raw (non-dbt) SQL* — symlink `.sqlfluff-raw` → `.maui/.sqlfluff-raw` using the same approach.
 
-**6. Add `CLAUDE.md` to `.gitignore`.** Each developer creates their own `CLAUDE.md` locally (not committed) containing just:
+**5. Add `CLAUDE.md` to `.gitignore`.** Each developer creates their own `CLAUDE.md` locally (not committed) containing just:
 
 ```
 @./AGENT.md

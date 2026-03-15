@@ -4,7 +4,7 @@ See the [root README](../../README.md) for full new-repo setup instructions.
 
 ## claude-code-review.yml
 
-Runs Claude Code review on pull requests. Uses a repo-local `REVIEW.md` if present, otherwise falls back to `.maui/REVIEW.md`.
+Runs on every PR and on `/review` comments. On pull requests it first updates the `.maui` submodule if it is behind `main`, commits the change to the PR branch, then runs the Claude Code review against the latest code.
 
 ### Secrets required
 
@@ -46,30 +46,3 @@ In the repository's branch protection settings (Settings → Branches → Branch
 1. Enable **Require status checks to pass before merging**
 2. Add `claude-review` as a required status check
 3. Separately enable **Require a pull request before merging** with at least 1 required approver for human review
-
-## update-submodule.yml
-
-Keeps the `.maui` submodule up to date by running on every PR. If `.maui` is behind `main` in `maui-team`, the workflow updates it and pushes the commit directly onto the PR branch — no separate PR needed.
-
-### Caller workflow
-
-Create `.github/workflows/update-maui.yml` in the consuming repo:
-
-```yaml
-name: Update .maui Submodule
-
-on:
-  pull_request:
-    types: [opened, reopened, synchronize]
-
-jobs:
-  update-submodule:
-    uses: beyondessential/maui-team/.github/workflows/update-submodule.yml@main
-    secrets: inherit
-```
-
-### Behaviour
-
-- If `.maui` is already at the latest commit, the workflow exits with no changes.
-- If `.maui` is behind, it commits the update and pushes it to the PR branch.
-- Does not run on PRs from forks (the `GITHUB_TOKEN` cannot push to a fork's branch).
