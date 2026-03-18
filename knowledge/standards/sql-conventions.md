@@ -21,6 +21,10 @@ Note: `ambiguous.join` is excluded from the SQLFluff config, so cross join detec
 - `is null` / `is not null` — never `= null`
 - Be explicit about null behaviour in aggregations and comparisons
 
+## Comma placement
+
+- Trailing commas — place `,` at the end of each line, not the start of the next line
+
 ## Ordering
 
 - Use `order by` only where the output order is meaningful to the consumer
