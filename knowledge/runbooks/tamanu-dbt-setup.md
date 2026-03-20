@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-1. **Python 3.8+** installed on your system
+1. **[uv](https://docs.astral.sh/uv/)** installed on your system
 2. **PostgreSQL** database access to Tamanu instance
 3. **Git** for version control
 
@@ -11,21 +11,9 @@
 ### 1. Clone and Setup Environment
 
 ```bash
-# Clone the repository
 git clone <repository-url>
 cd <project-directory>
-
-# Create virtual environment
-python -m venv .venv
-
-# Activate virtual environment
-# On Windows:
-.venv\Scripts\activate
-# On macOS/Linux:
-source .venv/bin/activate
-
-# Install dependencies
-pip install -r requirements.txt
+uv sync
 ```
 
 ### 2. Configure Environment Variables
@@ -51,10 +39,13 @@ dbt debug
 
 Update the following files for your specific project:
 
-#### dbt_project.yml
+#### pyproject.toml
 - `name`: Update to your project name
-- `profile`: Update to match your project name
 - `version`: Update to match your Tamanu version
+
+#### dbt_project.yml
+- `name`: Update to your project name (must match `pyproject.toml`)
+- `profile`: Update to match your project name
 
 #### config/profiles.yml
 - Profile name: Update to match your project name
@@ -71,13 +62,13 @@ Update the following files for your specific project:
 ### 5. Generate Survey Models
 
 ```bash
-python dbt_packages/tamanu_source_dbt/scripts/generate_survey_models.py
+uv run python dbt_packages/tamanu_source_dbt/scripts/generate_survey_models.py
 ```
 
 ### 6. Build Reporting Assets
 
 ```bash
-python dbt_packages/tamanu_source_dbt/scripts/build_reporting_assets.py
+uv run python dbt_packages/tamanu_source_dbt/scripts/build_reporting_assets.py
 ```
 
 This script:
@@ -100,9 +91,9 @@ dbt docs serve
 
 From the `tamanu-source-dbt` package:
 
-- `python dbt_packages/tamanu_source_dbt/scripts/generate_survey_models.py`
-- `python dbt_packages/tamanu_source_dbt/scripts/list_tamanu_reports.py`
-- `python dbt_packages/tamanu_source_dbt/scripts/build_reporting_assets.py`
+- `uv run python dbt_packages/tamanu_source_dbt/scripts/generate_survey_models.py`
+- `uv run python dbt_packages/tamanu_source_dbt/scripts/list_tamanu_reports.py`
+- `uv run python dbt_packages/tamanu_source_dbt/scripts/build_reporting_assets.py`
 
 ## Project Structure
 
