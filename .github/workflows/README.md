@@ -46,3 +46,38 @@ In the repository's branch protection settings (Settings → Branches → Branch
 1. Enable **Require status checks to pass before merging**
 2. Add `claude-review` as a required status check
 3. Separately enable **Require a pull request before merging** with at least 1 required approver for human review
+
+## publish-artifacts.yml
+
+Runs on release events. Publishes compiled dbt artifacts to S3 and registers them with the meta-server. Intended for `tamanu-source-dbt` and `tamanu-dbt-*` repos.
+
+The deployment name is derived from the calling repository name:
+- `tamanu-source-dbt` → `standard` (artifacts at `M.m.x/`)
+- `tamanu-dbt-<name>` → `<name>` (artifacts at `M.m.x/<name>/`)
+
+The `list-reports` job only runs for the `standard` deployment on its latest release.
+
+### Secrets and variables required
+
+- `META_CERT` — client certificate for authenticating with the meta-server
+- `META_KEY` — private key for the client certificate
+- `META_URL` — base URL of the meta-server (repository variable)
+
+AWS credentials are obtained via OIDC — no static AWS secrets required. The IAM role `arn:aws:iam::491618206332:role/gha-s3-tamanu-translations` must trust the calling repository.
+
+### Caller workflow
+
+Create `.github/workflows/publish-artifacts.yml` in the consuming repo:
+
+```yaml
+name: Publish Artifacts
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    uses: beyondessential/maui-team/.github/workflows/publish-artifacts.yml@main
+    secrets: inherit
+```
