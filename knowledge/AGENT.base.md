@@ -17,6 +17,11 @@ This file is imported by all Maui repositories via the `.maui/` submodule. It pr
    ```
    Only import the standards relevant to the repo — don't import all of them.
 
+   Repos that use dbt (`data-lake`, `data-staging`, `tamanu-source-dbt`, `tamanu-dbt-*`) should also import:
+   ```
+   @./.maui/knowledge/standards/metadata.md
+   ```
+
 3. Create a local `CLAUDE.md` (add to `.gitignore` — it is not committed) containing just:
    ```
    @./AGENT.md

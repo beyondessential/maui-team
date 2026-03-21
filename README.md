@@ -46,6 +46,7 @@ git submodule add https://github.com/beyondessential/maui-team .maui
 @./.maui/knowledge/AGENT.base.md
 @./.maui/knowledge/standards/git-conventions.md
 @./.maui/knowledge/standards/dbt-conventions.md
+@./.maui/knowledge/standards/metadata.md
 @./.maui/knowledge/standards/tamanu-conventions.md
 
 ## Repository: <repo-name>
@@ -57,8 +58,8 @@ Choose standards based on the repo type:
 
 | Repo type | Standards |
 |-----------|-----------|
-| `tamanu-dbt-*`, `data-staging` | git, sql, dbt, tamanu |
-| `tamanu-source-dbt`, `data-lake` | git, sql, dbt, tamanu, dagster (data-lake only) |
+| `tamanu-dbt-*`, `data-staging` | git, sql, dbt, metadata, tamanu |
+| `tamanu-source-dbt`, `data-lake` | git, sql, dbt, metadata, tamanu, dagster (data-lake only) |
 | `datatools` | git, python, testing |
 
 **3. Create `.github/workflows/claude-code-review.yml`:**
