@@ -94,14 +94,14 @@ Classification levels indicate the sensitivity of data and the handling controls
 |---|---|
 | `restricted` | Highest sensitivity. Includes personal health information, PII, credentials, and data subject to regulatory or contractual obligations. Strict access controls and encryption required. |
 | `confidential` | Sensitive business or operational data not intended for external audiences. Access on a need-to-know basis. |
-| `internal_use` | General internal information. Not sensitive, but not approved for public release. Available to all staff. |
+| `internal` | General internal information. Not sensitive, but not approved for public release. Available to all staff. |
 | `public` | Approved for unrestricted external sharing. No access controls required. |
 
 ### Classification guide
 
 - **`restricted`** — Does the model contain PII, patient health data, credentials, or data covered by a privacy regulation or data-sharing agreement? → `restricted`
 - **`confidential`** — Is this sensitive operational or business data that should not leave the organisation? → `confidential`
-- **`internal_use`** — Is this general internal data with no specific sensitivity, but not meant for public release? → `internal_use`
+- **`internal`** — Is this general internal data with no specific sensitivity, but not meant for public release? → `internal`
 - **`public`** — Has this data been explicitly approved for public release? → `public`
 
 ### Relationship to `pii`
