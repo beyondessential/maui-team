@@ -6,7 +6,7 @@ All dbt models must include a `meta:` block in their YAML file. This file define
 
 ```yaml
 meta:
-  owner: "maui"              # see Owner values
+  owner: "bes-maui"              # see Owner values
   domain: "clinical"         # see Domain values
   tier: "gold"               # see Tier values
   pii: true                  # true if model contains any PII columns
@@ -19,11 +19,10 @@ Assign the highest applicable classification level when a model contains data fr
 
 ## Owner values
 
-All data maintained by the Maui team uses `owner: "maui"`. External data sources that Maui does not generate or control use the name of the originating organisation.
-
 | Owner | When to use |
 |---|---|
-| `maui` | All Tamanu, mSupply, and Maui-managed data |
+| `bes-maui` | Models built and maintained by the Maui team (mSupply pipelines, dbt transformations) |
+| `bes-tamanu` | Tamanu source models — raw data maintained by the Tamanu team |
 | `flutracking` | FluTracking surveillance data |
 | `niwa` | NIWA weather and climate data |
 
