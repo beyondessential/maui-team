@@ -59,6 +59,55 @@ Update the following files for your specific project:
 - Update the title and description to reflect the deployment (project name, country/region, Tamanu instance)
 - Remove the template boilerplate once the project-specific content is in place
 
+#### AGENT.md
+Create `AGENT.md` at the repo root with the standard imports including the metadata standard:
+
+```
+@./.maui/knowledge/AGENT.base.md
+@./.maui/knowledge/standards/git-conventions.md
+@./.maui/knowledge/standards/sql-conventions.md
+@./.maui/knowledge/standards/dbt-conventions.md
+@./.maui/knowledge/standards/tamanu-conventions.md
+@./.maui/knowledge/standards/metadata.md
+
+---
+
+## Repository: <repo-name>
+
+<Brief description of the deployment.>
+```
+
+#### CLAUDE.md
+Create `CLAUDE.md` at the repo root that imports `AGENT.md`:
+
+```
+@./AGENT.md
+```
+
+#### .github/workflows/publish-artifacts.yml
+Create `.github/workflows/publish-artifacts.yml` to call the reusable workflow on release:
+
+```yaml
+name: Publish Artifacts
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    uses: beyondessential/maui-team/.github/workflows/publish-artifacts.yml@main
+    secrets: inherit
+```
+
+The workflow requires the following secrets and variables to be configured in the repository settings:
+
+- `META_CERT` — client certificate for authenticating with the meta-server
+- `META_KEY` — private key for the client certificate
+- `META_URL` — base URL of the meta-server (repository variable)
+
+AWS credentials are obtained via OIDC — the IAM role `arn:aws:iam::491618206332:role/gha-s3-tamanu-translations` must trust the calling repository.
+
 ### 5. Generate Survey Models
 
 ```bash
