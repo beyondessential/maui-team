@@ -49,7 +49,7 @@ In the repository's branch protection settings (Settings → Branches → Branch
 
 ## publish-artifacts.yml
 
-Runs on release events. Publishes compiled dbt artifacts to S3 and registers them with the meta-server. Intended for `tamanu-source-dbt` and `tamanu-dbt-*` repos.
+Runs on release events. Publishes all files from `compiled/v<version>/` to S3 (renaming `v<version>` → `v<M.m.x>` in filenames) and registers the canonical artifacts with the meta-server. Intended for `tamanu-source-dbt` and `tamanu-dbt-*` repos.
 
 The deployment name is derived from the calling repository name:
 - `tamanu-source-dbt` → `standard` (artifacts at `M.m.x/`)

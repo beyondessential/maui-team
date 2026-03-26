@@ -3,8 +3,13 @@ name: Publish Artifacts
 # Reusable workflow — call from any tamanu-source-dbt or tamanu-dbt-* repo.
 #
 # Deployment name is derived from the calling repository name:
-#   tamanu-source-dbt  → standard  (artifacts at M.m.x/)
-#   tamanu-dbt-fiji    → fiji      (artifacts at M.m.x/fiji/)
+#   tamanu-source-dbt  → standard
+#   tamanu-dbt-fiji    → fiji
+#
+# S3 layout:
+#   standard:   M.m.x/<artifact>-vM.m.x-standard.<ext>   (canonical artifacts)
+#               M.m.x/reporting-standard/                  (reports)
+#   deployment: M.m.x/<deployment>/reporting-<deployment>/ (reports only)
 #
 # list-reports only runs for the standard repo on its latest release.
 
@@ -98,9 +103,14 @@ jobs:
         run: python scripts/list_tamanu_reports.py
 
   # -------------------------------------------------------------------------
-  # Runs for every release in every repo. Artifact paths:
-  #   standard:    M.m.x/<artifact>-vM.m.x-standard.<ext>
-  #   deployment:  M.m.x/<deployment>/<artifact>-vM.m.x-<deployment>.<ext>
+  # Runs for every release in every repo.
+  #
+  # Canonical artifacts (analytics-metadata, reporting-schema, reporting-docs):
+  #   standard only:  M.m.x/<artifact>-vM.m.x-standard.<ext>
+  #
+  # Reports folder (all repos):
+  #   standard:    M.m.x/reporting-standard/
+  #   deployment:  M.m.x/<deployment>/reporting-<deployment>/
   # -------------------------------------------------------------------------
   publish-artifacts:
     name: Publish artifacts
@@ -112,17 +122,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-          cache: 'pip'
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install boto3 PyYAML
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -152,28 +151,50 @@ jobs:
             S3_DIR="$VX/$DEPLOYMENT"
           fi
 
-          aws s3 cp compiled/v$VERSION/analytics-metadata-v$VERSION-$DEPLOYMENT.yml \
-            $BUCKET/$S3_DIR/analytics-metadata-v$VX-$DEPLOYMENT.yml
+          REPORTS_FOLDER="reporting-$DEPLOYMENT"
 
-          aws s3 cp compiled/v$VERSION/reporting-schema-v$VERSION-$DEPLOYMENT.sql \
-            $BUCKET/$S3_DIR/reporting-schema-v$VX-$DEPLOYMENT.sql
+          # Canonical artifacts: standard only, uploaded to the top-level folder
+          if [ "$DEPLOYMENT" = "standard" ]; then
+            for artifact in analytics-metadata reporting-schema reporting-docs; do
+              file=$(ls compiled/v$VERSION/$artifact-* 2>/dev/null | head -1)
+              [ -z "$file" ] && continue
+              filename=$(basename "$file")
+              renamed="${filename//v$VERSION/v$VX}"
+              aws s3 cp "$file" "$BUCKET/$S3_DIR/$renamed"
+            done
+          fi
 
-          aws s3 cp compiled/v$VERSION/reporting-docs-v$VERSION-$DEPLOYMENT.html \
-            $BUCKET/$S3_DIR/reporting-docs-v$VX-$DEPLOYMENT.html
+          # Reports: all repos, uploaded to reporting-<deployment>/ subfolder
+          for file in compiled/v$VERSION/*; do
+            filename=$(basename "$file")
+            case "$filename" in
+              analytics-metadata-*|reporting-schema-*|reporting-docs-*) continue ;;
+            esac
+            renamed="${filename//v$VERSION/v$VX}"
+            aws s3 cp "$file" "$BUCKET/$S3_DIR/$REPORTS_FOLDER/$renamed"
+          done
 
           echo "$META_CERT" > meta.crt
           echo "$META_KEY" > meta.key
 
           BASE_URL="https://tamanu-translations.data.bes.au/$S3_DIR"
 
-          curl -v "$META_URL/artifacts/$S3_DIR/analytics-metadata/any" \
-            --cert meta.crt --key meta.key \
-            --data-binary "$BASE_URL/analytics-metadata-v$VX-$DEPLOYMENT.yml"
+          # Register canonical artifacts with meta-server: standard only
+          if [ "$DEPLOYMENT" = "standard" ]; then
+            curl -v "$META_URL/artifacts/$S3_DIR/analytics-metadata/any" \
+              --cert meta.crt --key meta.key \
+              --data-binary "$BASE_URL/analytics-metadata-v$VX-$DEPLOYMENT.yml"
 
-          curl -v "$META_URL/artifacts/$S3_DIR/reporting-schema/any" \
-            --cert meta.crt --key meta.key \
-            --data-binary "$BASE_URL/reporting-schema-v$VX-$DEPLOYMENT.sql"
+            curl -v "$META_URL/artifacts/$S3_DIR/reporting-schema/any" \
+              --cert meta.crt --key meta.key \
+              --data-binary "$BASE_URL/reporting-schema-v$VX-$DEPLOYMENT.sql"
 
-          curl -v "$META_URL/artifacts/$S3_DIR/reporting-docs/any" \
+            curl -v "$META_URL/artifacts/$S3_DIR/reporting-docs/any" \
+              --cert meta.crt --key meta.key \
+              --data-binary "$BASE_URL/reporting-docs-v$VX-$DEPLOYMENT.html"
+          fi
+
+          # Register reports folder with meta-server: all repos
+          curl -v "$META_URL/artifacts/$S3_DIR/$REPORTS_FOLDER/any" \
             --cert meta.crt --key meta.key \
-            --data-binary "$BASE_URL/reporting-docs-v$VX-$DEPLOYMENT.html"
+            --data-binary "$BASE_URL/$REPORTS_FOLDER/"
