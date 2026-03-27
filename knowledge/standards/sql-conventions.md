@@ -29,3 +29,8 @@ Note: `ambiguous.join` is excluded from the SQLFluff config, so cross join detec
 
 - Use `order by` only where the output order is meaningful to the consumer
 - Be explicit about `asc` / `desc`
+
+## Comments
+
+- Do not use semicolons (`;`) inside SQL comments
+- Use "and" instead of ";" to join clauses in comment text
