@@ -37,6 +37,7 @@ logs ─────┘                    └── facts ────┘
 - Model SQL: `<model_name>.sql`
 - Model documentation: `<model_name>.yml` (same name, same directory)
 - Report configs: in `models/reports/config/<model_name>.json`
+  - The `"query"` field in report configs is a placeholder (`"replace this"`) — the actual SQL is injected at compile time. This is expected and should not be flagged during review.
 
 ## Documentation
 

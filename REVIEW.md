@@ -55,6 +55,7 @@ Default to **Suggestion** when unsure. Reserve **Blocker** for issues that risk 
 - Naming that differs from preference but is clear and consistent within the file
 - Refactoring opportunities outside the PR scope
 - Hypothetical edge cases with no realistic path to occurring
+- `"query": "replace this"` in report config JSON files — this is an expected compile-time placeholder; the actual SQL is injected at build time (see `knowledge/standards/dbt-conventions.md`)
 
 ---
 
