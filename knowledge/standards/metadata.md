@@ -47,7 +47,7 @@ Domains classify datasets by subject matter. They are propagated to DataHub for 
 ### Domain guide
 
 - **`clinical`** — Does this describe something that happened to a patient? (encounter, test, prescription, diagnosis, birth, death) → `clinical`
-- **`admin`** — Is this about how a facility or programme is run rather than about patients? (billing, roles, config) → `admin`
+- **`admin`** — Is this about how a facility or program is run rather than about patients? (billing, roles, config) → `admin`
 - **`supply_chain`** — Does this track the movement or status of a physical commodity? (stock, order, shipment) → `supply_chain`
 - **`surveillance`** — Is this population-level disease or outbreak monitoring data? → `surveillance`
 - **`environmental_health`** — Is this about environmental risk factors or community conditions rather than individual patients or diseases? → `environmental_health`
