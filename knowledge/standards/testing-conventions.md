@@ -109,7 +109,9 @@ Prefer yml-based tests over singular SQL files wherever possible — they are co
 
 ### `dbt_utils` generic tests
 
-`dbt_utils` is available in all Maui dbt projects. Prefer these over singular SQL for single-column checks:
+`dbt_utils` is available in all Maui dbt projects. Prefer these over singular SQL for single-column checks.
+
+Test arguments must be nested under `arguments:`. Test config (`where`, `severity`) stays at the top level.
 
 **Numeric range** — catch data entry errors:
 
@@ -117,9 +119,10 @@ Prefer yml-based tests over singular SQL files wherever possible — they are co
 - name: age
   tests:
     - dbt_utils.accepted_range:
-        min_value: 0
-        max_value: 120
-        inclusive: true
+        arguments:
+          min_value: 0
+          max_value: 120
+          inclusive: true
 ```
 
 Nulls pass `accepted_range` by default.
@@ -130,7 +133,8 @@ Nulls pass `accepted_range` by default.
 - name: event_date
   tests:
     - dbt_utils.expression_is_true:
-        expression: "<= current_date"
+        arguments:
+          expression: "<= current_date"
 ```
 
 **Conditional not-null (hierarchy integrity)** — a child ID set implies the parent must also be set:
@@ -139,7 +143,8 @@ Nulls pass `accepted_range` by default.
 - name: location_group_id
   tests:
     - dbt_utils.expression_is_true:
-        expression: "is not null"
+        arguments:
+          expression: "is not null"
         where: "location_id is not null"
 ```
 
@@ -159,7 +164,7 @@ Use singular SQL tests only when the logic cannot be expressed as a yml generic 
 **Aggregation alignment** — when multiple fields are aggregated from the same source with the same `ORDER BY`, their separator counts must match:
 
 ```sql
--- tests/test_<model>_aggregation_alignment.sql
+-- data-tests/test_<model>_aggregation_alignment.sql
 -- Fails if two aggregated columns have a different number of entries.
 select patient_id
 from {{ ref('ds__example') }}
