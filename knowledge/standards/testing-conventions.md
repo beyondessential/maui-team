@@ -104,6 +104,71 @@ A singular test passes if it returns zero rows.
 | Multi-column constraints, business logic, complex filters | Singular test |
 | Cross-model referential integrity | Relationship generic test |
 
+### Common singular test patterns
+
+**Aggregation alignment** — when multiple fields are aggregated from the same source using the same `ORDER BY`, their separator counts must match. Mismatched counts indicate the aggregation logic diverged.
+
+```sql
+-- tests/test_<model>_aggregation_alignment.sql
+-- Fails if two aggregated columns have different numbers of entries.
+select patient_id
+from {{ ref('ds__example') }}
+where
+    (length(field_a) - length(replace(field_a, '; ', '')))
+    != (length(field_b) - length(replace(field_b, '; ', '')))
+```
+
+**Accepted values on derived status fields** — status fields computed via `CASE` expressions should only ever produce the expected values. Use generic `accepted_values` in the yml rather than a singular test.
+
+```yaml
+- name: cohort_status
+  tests:
+    - accepted_values:
+        values: ['Active', 'N/A']
+```
+
+**Hierarchy integrity** — a child ID being set implies the parent ID must also be set.
+
+```sql
+-- tests/test_<model>_location_hierarchy.sql
+select patient_id
+from {{ ref('ds__example') }}
+where location_id is not null
+    and location_group_id is null
+```
+
+**Sanity range checks** — catch data entry errors on numeric or date fields.
+
+```sql
+-- tests/test_<model>_age_range.sql
+select patient_id
+from {{ ref('ds__example') }}
+where age is not null
+    and (age < 0 or age > 120)
+```
+
+```sql
+-- tests/test_<model>_no_future_dates.sql
+select patient_id
+from {{ ref('ds__example') }}
+where event_date > current_date
+```
+
+**Primary key tests** — all base and dataset models must have `not_null` and `unique` tests on their primary key column.
+
+```yaml
+- name: patient_id
+  tests:
+    - not_null
+    - unique
+```
+
+### Naming
+
+Singular test files follow the pattern: `test_<model>_<what_is_being_checked>.sql`
+
+Examples: `test_prescription_analysis_prescription_alignment.sql`, `test_ncd_dataset_age_range.sql`
+
 ### Pre-commit
 
 ```bash
