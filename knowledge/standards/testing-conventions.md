@@ -100,25 +100,50 @@ A singular test passes if it returns zero rows.
 
 | Scenario | Use |
 |----------|-----|
-| Null checks, uniqueness, accepted values, relationships | Generic test |
-| Multi-column constraints, business logic, complex filters | Singular test |
-| Cross-model referential integrity | Relationship generic test |
+| Null checks, uniqueness, accepted values, relationships | Generic test (yml) |
+| Numeric range, conditional not-null, simple expression | `dbt_utils` generic test (yml) |
+| Multi-column constraints, complex business logic | Singular test (SQL file) |
+| Cross-model referential integrity | `relationships` generic test (yml) |
 
-### Common singular test patterns
+Prefer yml-based tests over singular SQL files wherever possible — they are co-located with column documentation and easier to scan.
 
-**Aggregation alignment** — when multiple fields are aggregated from the same source using the same `ORDER BY`, their separator counts must match. Mismatched counts indicate the aggregation logic diverged.
+### `dbt_utils` generic tests
 
-```sql
--- tests/test_<model>_aggregation_alignment.sql
--- Fails if two aggregated columns have different numbers of entries.
-select patient_id
-from {{ ref('ds__example') }}
-where
-    (length(field_a) - length(replace(field_a, '; ', '')))
-    != (length(field_b) - length(replace(field_b, '; ', '')))
+`dbt_utils` is available in all Maui dbt projects. Prefer these over singular SQL for single-column checks:
+
+**Numeric range** — catch data entry errors:
+
+```yaml
+- name: age
+  tests:
+    - dbt_utils.accepted_range:
+        min_value: 0
+        max_value: 120
+        inclusive: true
 ```
 
-**Accepted values on derived status fields** — status fields computed via `CASE` expressions should only ever produce the expected values. Use generic `accepted_values` in the yml rather than a singular test.
+Nulls pass `accepted_range` by default.
+
+**Date not in future**:
+
+```yaml
+- name: event_date
+  tests:
+    - dbt_utils.expression_is_true:
+        expression: "<= current_date"
+```
+
+**Conditional not-null (hierarchy integrity)** — a child ID set implies the parent must also be set:
+
+```yaml
+- name: location_group_id
+  tests:
+    - dbt_utils.expression_is_true:
+        expression: "is not null"
+        where: "location_id is not null"
+```
+
+**Accepted values on derived status fields** — status fields computed via `CASE` expressions:
 
 ```yaml
 - name: cohort_status
@@ -127,34 +152,23 @@ where
         values: ['Active', 'N/A']
 ```
 
-**Hierarchy integrity** — a child ID being set implies the parent ID must also be set.
+### Singular test patterns
+
+Use singular SQL tests only when the logic cannot be expressed as a yml generic test — typically multi-column constraints.
+
+**Aggregation alignment** — when multiple fields are aggregated from the same source with the same `ORDER BY`, their separator counts must match:
 
 ```sql
--- tests/test_<model>_location_hierarchy.sql
+-- tests/test_<model>_aggregation_alignment.sql
+-- Fails if two aggregated columns have a different number of entries.
 select patient_id
 from {{ ref('ds__example') }}
-where location_id is not null
-    and location_group_id is null
+where
+    (length(field_a) - length(replace(field_a, '; ', '')))
+    != (length(field_b) - length(replace(field_b, '; ', '')))
 ```
 
-**Sanity range checks** — catch data entry errors on numeric or date fields.
-
-```sql
--- tests/test_<model>_age_range.sql
-select patient_id
-from {{ ref('ds__example') }}
-where age is not null
-    and (age < 0 or age > 120)
-```
-
-```sql
--- tests/test_<model>_no_future_dates.sql
-select patient_id
-from {{ ref('ds__example') }}
-where event_date > current_date
-```
-
-**Primary key tests** — all base and dataset models must have `not_null` and `unique` tests on their primary key column.
+**Primary key tests** — all base and dataset models must have `not_null` and `unique` on their primary key:
 
 ```yaml
 - name: patient_id
@@ -165,9 +179,9 @@ where event_date > current_date
 
 ### Naming
 
-Singular test files follow the pattern: `test_<model>_<what_is_being_checked>.sql`
+Singular test files: `test_<model>_<what_is_being_checked>.sql`
 
-Examples: `test_prescription_analysis_prescription_alignment.sql`, `test_ncd_dataset_age_range.sql`
+Example: `test_prescription_analysis_prescription_alignment.sql`
 
 ### Pre-commit
 
