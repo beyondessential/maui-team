@@ -104,6 +104,7 @@ A singular test passes if it returns zero rows.
 | Numeric range, conditional not-null, simple expression | `dbt_utils` generic test (yml) |
 | Multi-column constraints, complex business logic | Singular test (SQL file) |
 | Cross-model referential integrity | `relationships` generic test (yml) |
+| Window functions, complex SQL logic, transformation correctness | Unit test (yml) |
 
 Prefer yml-based tests over singular SQL files wherever possible — they are co-located with column documentation and easier to scan.
 
@@ -187,6 +188,34 @@ where
 Singular test files: `test_<model>_<what_is_being_checked>.sql`
 
 Example: `test_prescription_analysis_prescription_alignment.sql`
+
+### Unit tests
+
+Use dbt unit tests to verify model SQL logic with controlled fixture data — particularly window functions, complex joins, and filtering conditions that are hard to assert via data tests alone.
+
+```yaml
+# data-tests/unit_tests/<model_name>.yml
+version: 2
+
+unit_tests:
+  - name: test_<model>_<what_is_being_checked>
+    model: <model_name>
+    given:
+      - input: source('schema', 'table')
+        format: csv
+        rows: |
+          col_a,col_b
+          val1,val2
+    expect:
+      format: csv
+      rows: |
+        output_col_a,output_col_b
+        expected1,expected2
+```
+
+- Place unit test YAML files in `data-tests/unit_tests/<model_name>.yml`
+- Keep fixture data minimal — only rows needed to exercise the specific behaviour
+- Name tests: `test_<model>_<what_is_being_checked>`
 
 ### Pre-commit
 

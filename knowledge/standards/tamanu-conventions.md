@@ -57,6 +57,20 @@ WHERE valid_from::DATE <= rm.end_of_month
   AND valid_to::DATE >= rm.end_of_month
 ```
 
+## `logs.changes` window functions
+
+When using window functions against `logs.changes`, always order by:
+
+```sql
+order by c.logged_at, c.record_updated_at, c.id
+```
+
+- `logged_at` — server-side transaction timestamp; authoritative and immune to device clock skew
+- `record_updated_at` — tiebreaker for rows sharing the same `logged_at` (e.g. batch sync in one transaction); reflects device-side change time
+- `id` — final tiebreaker for deterministic results when both timestamps are identical
+
+Do not order by `logged_at, c.id` alone — `id` is a random UUID and does not preserve insertion order.
+
 ## Data table meta
 
 Mart models exposed as data tables require:
