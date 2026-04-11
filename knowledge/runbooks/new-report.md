@@ -1,5 +1,17 @@
 # Runbook: Adding a New Report
 
+## Report types and naming
+
+Choose the suffix based on what the report exposes:
+
+| Report type | SQL filename suffix | Use when |
+|-------------|--------------------|----|
+| Line list | `<description>-line-list.sql` | Patient-level rows (one row per patient/encounter) |
+| Summary | `<description>-summary.sql` | Aggregated counts or metrics |
+| Grouped summary | `<description>-summary-by-<grouping>.sql` | Aggregated and broken down by a dimension |
+
+Sensitive variants always mirror the standard name with a `sensitive-` prefix: `sensitive-<name>.sql`.
+
 Applies to `tamanu-source-dbt` and `tamanu-dbt-*` repos. Follow steps in order; steps
 marked **[parallel]** can be delegated to separate agents running simultaneously.
 
@@ -36,23 +48,24 @@ Note any labels that are missing — you will add them in step 6.
 
 ### 3. Create the standard report
 
-Create the SQL model at `models/reports/sql/standard/<name>-line-list.sql`.
+Create the SQL model at `models/reports/sql/standard/<name>.sql` (using the appropriate
+suffix from the naming table above).
 
 - Use `{{ ref('ds__<dataset>') }}` — never `source()` directly
 - Apply `{{ translate_label('field_name') }}` for all user-facing column aliases
 - Apply `{{ to_user_selected_timezone(field) }}` for all datetime fields
 - Include `order by` (reports layer allows it; bases and datasets do not)
 
-Create the matching config at `models/reports/config/<name>-line-list.json`.
+Create the matching config at `models/reports/config/standard/<name>.json`.
 
-### 4. Create the sensitive report
+### 4. Create the sensitive report (if applicable)
 
-Create `models/reports/sql/sensitive/sensitive-<name>-line-list.sql` and
-`models/reports/config/sensitive-<name>-line-list.json`.
+Not all reports have a sensitive variant — only create one if the report includes
+encounters from sensitive facilities. The standard report excludes those encounters;
+the sensitive version includes them.
 
-The sensitive version extends the standard report with personally identifiable or
-clinically sensitive columns. It must include everything the standard report includes
-plus the additional sensitive fields.
+Create `models/reports/sql/sensitive/sensitive-<name>.sql` and
+`models/reports/config/sensitive/sensitive-<name>.json`.
 
 ### 5. Add missing translations
 
@@ -82,14 +95,14 @@ python scripts/validate_report_configs.py
 python scripts/check_translations.py
 
 # Lint SQL
-sqlfluff fix models/reports/sql/standard/<name>-line-list.sql
-sqlfluff fix models/reports/sql/sensitive/sensitive-<name>-line-list.sql
+sqlfluff fix models/reports/sql/standard/<name>.sql
+sqlfluff fix models/reports/sql/sensitive/sensitive-<name>.sql  # if sensitive variant exists
 ```
 
 ### 7. Run dbt tests
 
 ```bash
-dbt test --profiles-dir config --select <name>_line_list sensitive_<name>_line_list
+dbt test --profiles-dir config --select <name> sensitive_<name>
 ```
 
 ### 8. Verify the report list
@@ -105,8 +118,8 @@ python scripts/list_tamanu_reports.py
 
 ## Checklist before opening a PR
 
-- [ ] Standard report SQL + config created
-- [ ] Sensitive report SQL + config created
+- [ ] Standard report SQL + config created (correct suffix: `-line-list`, `-summary`, etc.)
+- [ ] Sensitive report SQL + config created (if report includes sensitive facility encounters)
 - [ ] All new labels added to translations CSV
 - [ ] Translation macro regenerated (if CSV changed)
 - [ ] `validate_report_configs.py` passes
