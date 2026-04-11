@@ -78,7 +78,7 @@ Flag as 🟡 **Suggestion** if:
 - Hypothetical edge cases with no realistic path to occurring
 - `"query": "replace this"` in report config JSON files — this is an expected compile-time placeholder; the actual SQL is injected at build time (see `knowledge/standards/dbt-conventions.md`)
 - Files under `compiled/` — these are generated outputs; review the source, not the output
-- Auto-generated files (`models/surveys/`, `macros/default_translations.sql`, `list_tamanu_reports.md`) — flag the generator or source data instead
+- Auto-generated files (`models/surveys/`, `macros/translation.sql`, `list_tamanu_reports.md`) — flag the generator or source data instead
 
 ---
 
