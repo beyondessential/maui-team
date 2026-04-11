@@ -2,7 +2,7 @@ name: Python CI
 
 # Reusable workflow — call from any repo that uses uv with Python scripts.
 #
-# Runs ruff lint, auto-formats with ruff (commits back if changed), and pytest.
+# Runs ruff lint + format, auto-fixing and committing back any changes, and pytest.
 # Ruff config is read from pyproject.toml in the calling repo (which should
 # extend .maui/ruff.toml for the shared rule set).
 
@@ -37,17 +37,16 @@ jobs:
       - name: Install dependencies
         run: uv sync --all-groups
 
-      - name: Lint
-        run: uv run ruff check ${{ inputs.scripts-path }}
+      - name: Lint and format
+        run: |
+          uv run ruff check --fix ${{ inputs.scripts-path }}
+          uv run ruff format ${{ inputs.scripts-path }}
 
-      - name: Format
-        run: uv run ruff format ${{ inputs.scripts-path }}
-
-      - name: Commit formatted files
+      - name: Commit auto-fixed files
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git diff --quiet || (git commit -am "style: auto-format with ruff" && git push)
+          git diff --quiet || (git commit -am "style: auto-fix and format with ruff" && git push)
 
   pytest:
     name: Run pytest
