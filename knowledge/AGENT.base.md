@@ -20,13 +20,15 @@ This file is imported by all Maui repositories via the `.maui/` submodule. It pr
    Repos that use dbt (`data-lake`, `data-staging`, `tamanu-source-dbt`, `tamanu-dbt-*`) should also import:
    ```
    @./.maui/knowledge/standards/metadata.md
+   @./.maui/knowledge/standards/agent-patterns.md
    ```
 
-3. Create a local `CLAUDE.md` (add to `.gitignore` — it is not committed) containing just:
-   ```
-   @./AGENT.md
-   ```
-   This is optional for each developer; those who don't use Claude Code don't need it.
+3. Create a local AI context file (add to `.gitignore` — it is not committed) that points to `AGENT.md`. The filename depends on the tool:
+   - **Claude Code**: `CLAUDE.md` containing `@./AGENT.md`
+   - **Cursor**: `.cursorrules` containing `@./AGENT.md` (or use Cursor's project rules)
+   - **Other tools**: consult the tool's documentation for how to set a project-level context file
+
+   `AGENT.md` is the committed, tool-agnostic entry point. Local config files are per-developer and never committed.
 
 ---
 

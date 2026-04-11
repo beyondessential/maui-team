@@ -49,6 +49,27 @@ Default to **Suggestion** when unsure. Reserve **Blocker** for issues that risk 
 
 ---
 
+## dbt-specific checks
+
+Run before posting inline comments when reviewing a dbt repo:
+
+```bash
+python scripts/validate_report_configs.py
+python scripts/check_translations.py
+sqlfluff lint .
+```
+
+Flag as 🔴 **Blocker** if:
+- A new report exists in `sensitive/` but is missing its `standard/` counterpart (or vice versa)
+- New user-facing column labels are missing from the translations CSV
+
+Flag as 🟡 **Suggestion** if:
+- A datetime field in a report does not use the project's timezone macro (check repo
+  `AGENT.md` for the macro name)
+- `order by` appears in a base or dataset model (only allowed in reports)
+
+---
+
 ## What NOT to flag
 
 - Style issues already enforced by a linter (SQLFluff, ruff, etc.)
@@ -56,6 +77,8 @@ Default to **Suggestion** when unsure. Reserve **Blocker** for issues that risk 
 - Refactoring opportunities outside the PR scope
 - Hypothetical edge cases with no realistic path to occurring
 - `"query": "replace this"` in report config JSON files — this is an expected compile-time placeholder; the actual SQL is injected at build time (see `knowledge/standards/dbt-conventions.md`)
+- Files under `compiled/` — these are generated outputs; review the source, not the output
+- Auto-generated files (`models/surveys/`, `macros/default_translations.sql`, `list_tamanu_reports.md`) — flag the generator or source data instead
 
 ---
 
