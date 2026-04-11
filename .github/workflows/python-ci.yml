@@ -1,4 +1,4 @@
-name: Python tests
+name: Python CI
 
 # Reusable workflow — call from any repo that uses uv with Python scripts.
 #
