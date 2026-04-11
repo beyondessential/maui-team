@@ -1,0 +1,62 @@
+name: Python tests
+
+# Reusable workflow — call from any repo that uses uv with Python scripts.
+#
+# Runs ruff lint + format check and pytest.
+# Ruff config is read from pyproject.toml in the calling repo (which should
+# extend .maui/ruff.toml for the shared rule set).
+
+on:
+  workflow_call:
+    inputs:
+      scripts-path:
+        description: 'Path to lint with ruff (e.g. scripts/)'
+        required: false
+        default: 'scripts/'
+        type: string
+
+jobs:
+  ruff:
+    name: Ruff lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --all-groups
+
+      - name: Lint
+        run: uv run ruff check ${{ inputs.scripts-path }}
+
+      - name: Format check
+        run: uv run ruff format --check ${{ inputs.scripts-path }}
+
+  pytest:
+    name: Run pytest
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --all-groups
+
+      - name: Run tests
+        run: uv run pytest
