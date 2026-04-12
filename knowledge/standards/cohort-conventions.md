@@ -46,13 +46,35 @@ a complete AI-queryable clinical semantic layer.
 
 ---
 
+## Cohort definition registry
+
+BES maintains a central data dictionary of cohort definitions in `tamanu-source-dbt` as a seed:
+`seeds/cohort_definitions.csv`. This is the authoritative source of `cohort_definition_id`
+values across all deployments.
+
+Seed schema:
+
+| Column | Description |
+|--------|-------------|
+| `cohort_definition_id` | Unique integer ID — assigned sequentially; never reused |
+| `cohort_name` | Short machine-readable name (e.g. `ncd_registry`) |
+| `description` | Human-readable description of the cohort program |
+| `omop_concept_id` | OMOP concept ID for the clinical domain (SNOMED preferred) |
+| `vocabulary_id` | Vocabulary source (e.g. `SNOMED`) |
+
+**Before building a new cohort**, check whether the program already has an entry. If not,
+open a PR to `tamanu-source-dbt` to register it first. The deployment-specific `coh__` model
+must reference the assigned `cohort_definition_id` from this registry — never assign one locally.
+
+---
+
 ## OMOP-lite required columns
 
 All `coh__<name>` models must include these four columns:
 
 | Column | Type | Source |
 |--------|------|--------|
-| `cohort_definition_id` | integer constant | Document value in model `.yml` description |
+| `cohort_definition_id` | integer | From `tamanu-source-dbt` cohort definition registry — see above |
 | `subject_id` | uuid | `patients.id` — no hashing needed for internal use |
 | `cohort_start_date` | date | Deployment-specific — see below |
 | `cohort_end_date` | date | Deployment-specific — see below |

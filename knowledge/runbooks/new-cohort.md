@@ -31,6 +31,15 @@ Applies to `tamanu-dbt-*` repos. See `cohort-conventions.md` for full pattern re
 Document the answers in the repo's `AGENT.md` under a **"Cohort configuration"** section
 before proceeding. If this section does not exist, create it.
 
+**Check the central cohort definition registry.**
+
+Open `tamanu-source-dbt/seeds/cohort_definitions.csv` and check whether this program already
+has an entry. If it does not:
+1. Open a PR to `tamanu-source-dbt` to add the new row (assign the next available integer ID)
+2. Wait for that PR to merge before building the deployment-specific `coh__` models here
+3. The `cohort_definition_id` used in this repo must match the registry value exactly — never
+   assign one locally
+
 ---
 
 ## Prerequisites
@@ -160,6 +169,7 @@ grep -r "cohort_definition_id" models/cohort/*.yml
 - [ ] Repo `AGENT.md` updated with cohort configuration (entry/exit date sources, program ID)
 - [ ] Tamanu report and/or Tupaia aggregation model added (if required)
 - [ ] Both Tamanu report and Tupaia model source from `coh__` — not independently
-- [ ] `cohort_definition_id` is unique in this repo
+- [ ] `cohort_definition_id` is registered in `tamanu-source-dbt/seeds/cohort_definitions.csv`
+- [ ] `cohort_definition_id` value in this model matches the registry exactly
 - [ ] `sqlfluff fix` applied
 - [ ] `dbt test` passes
