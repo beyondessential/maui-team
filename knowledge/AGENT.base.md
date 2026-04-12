@@ -23,11 +23,6 @@ This file is imported by all Maui repositories via the `.maui/` submodule. It pr
    @./.maui/knowledge/standards/agent-patterns.md
    ```
 
-   Repos that model program registries as cohorts (`tamanu-dbt-*` with program registry data) should also import:
-   ```
-   @./.maui/knowledge/standards/cohort-conventions.md
-   ```
-
 3. Create a local AI context file (add to `.gitignore` — it is not committed) that points to `AGENT.md`. The filename depends on the tool:
    - **Claude Code**: `CLAUDE.md` containing `@./AGENT.md`
    - **Cursor**: `.cursorrules` containing `@./AGENT.md` (or use Cursor's project rules)
