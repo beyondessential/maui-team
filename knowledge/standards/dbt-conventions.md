@@ -108,3 +108,47 @@ dbt test --profiles-dir config
 ## Project-specific conventions
 
 Add layer-specific rules, variable usage, macro conventions, translation details, and validation script paths in the repo's `AGENT.md`.
+
+---
+
+## OMOP-inspired semantic layer (`coh__`)
+
+For program registry and cohort modelling, a new `coh__` layer sits alongside the existing stack.
+This is the direction for new cohort models — existing `ds__`, `fct__`, and `dim__` models are
+not deprecated.
+
+```
+sources
+  └── bases (views)
+        └── [int__ ephemeral — all joins, pivots, cohort logic as CTEs]
+              └── coh__ (views) — OMOP-aligned semantic layer; shared pivot point
+                    ├── Tamanu reports (views) — patient-level line lists
+                    └── Tupaia aggregation models (tables) — monthly indicators
+```
+
+### `coh__` materialisation rules
+
+| Layer | Materialisation | Rule |
+|-------|----------------|------|
+| `int__` feeding `coh__` | `ephemeral` | All transformation logic — no view nesting penalty |
+| `coh__<name>` | `view` | Patient-level; never pre-aggregated |
+| Tamanu reports over `coh__` | `view` | Rendered as patient rows in Tamanu app |
+| Tupaia aggregations over `coh__` | `table` | Pre-aggregated counts/percentages |
+
+### Shared-pivot rule
+
+Tamanu reports and Tupaia aggregation models must both source from `coh__` — never define
+cohort membership logic independently in each output layer. This ensures counts are identical
+by construction.
+
+### `map__omop_<domain>` — concept ID mappings
+
+OMOP concept shadow columns (SNOMED, LOINC, RxNorm) go in `coh__` models only, never in
+base models. Mappings live in `map__omop_<domain>` seeds:
+
+- **Universal** (same across all Tamanu deployments) — in `tamanu-source-dbt` (e.g. `map__omop_sex`)
+- **Deployment-specific** (local reference data, condition codes) — in `tamanu-dbt-*` seeds
+
+Standard seed schema: `local_code`, `local_name`, `concept_id`, `concept_name`, `vocabulary_id`.
+
+See `cohort-conventions.md` for full detail on building `coh__` models.
