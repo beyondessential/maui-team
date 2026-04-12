@@ -251,14 +251,18 @@ group by patient_id, exit_recorded_date
 
 ## Shared-pivot rule
 
-Tamanu reports and Tupaia aggregation models must both source from `coh__` — never define
+All reports — line-list and aggregation — must source from `coh__` — never define
 cohort membership logic independently in each output layer.
 
 ```
 coh__<name> (view)
-  ├── Tamanu report (view)  →  SELECT * FROM coh__<name> WHERE ...
-  └── Tupaia mart (table)   →  SELECT yearmonth, COUNT(*) FROM coh__<name> GROUP BY yearmonth
+  ├── Tamanu line-list report (view)    →  SELECT * FROM coh__<name> WHERE ...
+  ├── Tamanu aggregation report (view)  →  SELECT yearmonth, COUNT(*) FROM coh__<name> GROUP BY yearmonth
+  └── Tupaia aggregation model (table)  →  same aggregation logic; Tupaia applies its own filters
 ```
+
+Where Tamanu and Tupaia aggregation outputs share the same logic, define it in a macro and
+call it from both models.
 
 ---
 

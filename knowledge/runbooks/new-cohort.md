@@ -135,9 +135,16 @@ Create matching `.yml` — document measurement columns including control thresh
 - Apply `{{ to_user_selected_timezone(...) }}` for datetime fields
 - Follow the `new-report.md` runbook for config and translations
 
+**Tamanu aggregation report** (if needed):
+- Create a `view`-materialised model sourcing from `{{ ref('coh__<name>') }}`
+- Aggregate by `yearmonth`, facility, or other dimensions in the report — filtering applied here
+- Never redefine cohort membership logic — always source from `coh__`
+
 **Tupaia aggregation model** (if needed):
 - Create a `table`-materialised model in `models/cohort/` or `data-staging`
 - Source from `{{ ref('coh__<name>') }}` — aggregate by `yearmonth`, facility, or other dimensions
+- Tupaia applies its own filters; this model pre-aggregates for performance
+- If the aggregation logic is identical to a Tamanu aggregation report, define it in a shared macro
 - Never redefine cohort membership logic — always source from `coh__`
 
 ---

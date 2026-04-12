@@ -122,8 +122,9 @@ sources
   └── bases (views)
         └── [int__ ephemeral — all joins, pivots, cohort logic as CTEs]
               └── coh__ (views) — OMOP-aligned semantic layer; shared pivot point
-                    ├── Tamanu reports (views) — patient-level line lists
-                    └── Tupaia aggregation models (tables) — monthly indicators
+                    ├── Tamanu line-list reports (views) — patient-level rows
+                    ├── Tamanu aggregation reports (views) — filtering in report
+                    └── Tupaia aggregation models (tables) — pre-aggregated; Tupaia filters
 ```
 
 ### `coh__` materialisation rules
@@ -132,12 +133,16 @@ sources
 |-------|----------------|------|
 | `int__` feeding `coh__` | `ephemeral` | All transformation logic — no view nesting penalty |
 | `coh__<name>` | `view` | Patient-level; never pre-aggregated |
-| Tamanu reports over `coh__` | `view` | Rendered as patient rows in Tamanu app |
-| Tupaia aggregations over `coh__` | `table` | Pre-aggregated counts/percentages |
+| Tamanu line-list reports | `view` | Patient rows rendered in app |
+| Tamanu aggregation reports | `view` | Summarised indicators; filtering applied in report |
+| Tupaia aggregation models | `table` | Pre-aggregated counts/percentages; Tupaia applies its own filters |
+
+Where Tamanu and Tupaia aggregation outputs share the same logic, use a macro to define it
+once and call it from both models.
 
 ### Shared-pivot rule
 
-Tamanu reports and Tupaia aggregation models must both source from `coh__` — never define
+All reports — line-list and aggregation — must source from `coh__` — never define
 cohort membership logic independently in each output layer. This ensures counts are identical
 by construction.
 
