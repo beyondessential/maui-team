@@ -73,3 +73,4 @@ Available runbooks:
 - `new-report.md` — adding a standard + sensitive report pair
 - `macro-change-impact.md` — assessing and rolling out a macro to existing models
 - `tamanu-dbt-setup.md` — setting up a new deployment repo
+- `new-cohort.md` — building a program registry cohort using the OMOP-inspired semantic layer
