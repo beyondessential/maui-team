@@ -1,0 +1,99 @@
+name: dbt Tests
+
+# Reusable workflow — call from tamanu-source-dbt or tamanu-dbt-* repos.
+#
+# Installs project dependencies via uv, writes a CI profiles.yml from secrets,
+# installs dbt packages, and runs dbt test to execute all data-tests.
+#
+# The profile name is read from dbt_project.yml automatically, so no
+# configuration is needed in the caller beyond the required secrets.
+
+on:
+  workflow_call:
+    inputs:
+      profiles-dir:
+        description: 'Directory for the generated CI profiles.yml (relative to project root)'
+        required: false
+        default: 'config'
+        type: string
+      dbt-schema:
+        description: 'Target schema for the dbt test run'
+        required: false
+        default: 'reporting'
+        type: string
+    secrets:
+      DBT_HOST:
+        required: true
+      DBT_PORT:
+        required: false
+      DBT_DBNAME:
+        required: true
+      DBT_USER:
+        required: true
+      DBT_PASSWORD:
+        required: true
+
+jobs:
+  dbt-test:
+    name: dbt data tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --all-groups
+
+      - name: Write CI profiles.yml
+        env:
+          DBT_HOST: ${{ secrets.DBT_HOST }}
+          DBT_PORT: ${{ secrets.DBT_PORT }}
+          DBT_DBNAME: ${{ secrets.DBT_DBNAME }}
+          DBT_USER: ${{ secrets.DBT_USER }}
+          DBT_PASSWORD: ${{ secrets.DBT_PASSWORD }}
+          DBT_SCHEMA: ${{ inputs.dbt-schema }}
+          PROFILES_DIR: ${{ inputs.profiles-dir }}
+        run: |
+          uv run python3 - <<'PYEOF'
+          import os, yaml
+
+          with open('dbt_project.yml') as f:
+              profile_name = yaml.safe_load(f)['profile']
+
+          profile = {
+              profile_name: {
+                  'target': 'ci',
+                  'outputs': {
+                      'ci': {
+                          'type': 'postgres',
+                          'host': os.environ['DBT_HOST'],
+                          'port': int(os.environ.get('DBT_PORT') or '5432'),
+                          'dbname': os.environ['DBT_DBNAME'],
+                          'user': os.environ['DBT_USER'],
+                          'password': os.environ['DBT_PASSWORD'],
+                          'schema': os.environ['DBT_SCHEMA'],
+                          'threads': 4,
+                      }
+                  }
+              }
+          }
+
+          profiles_dir = os.environ.get('PROFILES_DIR', 'config')
+          os.makedirs(profiles_dir, exist_ok=True)
+          with open(f'{profiles_dir}/profiles.yml', 'w') as f:
+              yaml.dump(profile, f)
+          PYEOF
+
+      - name: Install dbt packages
+        run: uv run dbt deps
+
+      - name: Run dbt tests
+        run: uv run dbt test --profiles-dir '${{ inputs.profiles-dir }}'

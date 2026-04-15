@@ -47,6 +47,48 @@ In the repository's branch protection settings (Settings → Branches → Branch
 2. Add `claude-review` as a required status check
 3. Separately enable **Require a pull request before merging** with at least 1 required approver for human review
 
+## dbt-tests.yml
+
+Runs dbt data-tests against a live database. Intended for `tamanu-source-dbt` and `tamanu-dbt-*` repos.
+
+Installs project dependencies via `uv sync`, writes a `profiles.yml` from secrets, runs `dbt deps` to install dbt packages, then runs `dbt test` to execute all data-tests. The dbt profile name is read automatically from `dbt_project.yml`.
+
+### Secrets required
+
+| Secret | Required | Description |
+|--------|----------|-------------|
+| `DBT_HOST` | Yes | Database hostname |
+| `DBT_DBNAME` | Yes | Database name |
+| `DBT_USER` | Yes | Database username |
+| `DBT_PASSWORD` | Yes | Database password |
+| `DBT_PORT` | No | Database port (defaults to 5432) |
+
+### Inputs
+
+| Input | Default | Description |
+|-------|---------|-------------|
+| `profiles-dir` | `config` | Directory where the CI `profiles.yml` is written, relative to the project root |
+| `dbt-schema` | `reporting` | Target schema for the dbt test run |
+
+### Caller workflow
+
+Create `.github/workflows/dbt-tests.yml` in the consuming repo:
+
+```yaml
+name: dbt Tests
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    uses: beyondessential/maui-team/.github/workflows/dbt-tests.yml@main
+    secrets: inherit
+```
+
 ## publish-artifacts.yml
 
 Runs on release events. Publishes all files from `compiled/v<version>/` to S3 (renaming `v<version>` → `v<M.m.x>` in filenames) and registers the canonical artifacts with the meta-server. Intended for `tamanu-source-dbt` and `tamanu-dbt-*` repos.
