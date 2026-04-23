@@ -69,18 +69,16 @@ Use built-in generic tests for standard data quality checks:
 
 ```yaml
 models:
-  - name: base_patients
+  - name: ds__patients
     columns:
       - name: patient_id
         tests:
           - not_null
           - unique
-      - name: date_of_birth
-        tests:
-          - not_null
 ```
 
-Apply to all primary keys at minimum.
+Apply to all primary keys in dataset models at minimum. Base models are exempt — tests
+belong on source models, not on the thin projections over them.
 
 ### Singular tests (tests/*.sql)
 
@@ -174,7 +172,7 @@ where
     != (length(field_b) - length(replace(field_b, '; ', '')))
 ```
 
-**Primary key tests** — all base and dataset models must have `not_null` and `unique` on their primary key:
+**Primary key tests** — all dataset models must have `not_null` and `unique` on their primary key. Base models are exempt.
 
 ```yaml
 - name: patient_id

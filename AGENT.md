@@ -25,6 +25,10 @@ See `README.md` for the full setup steps (submodule, AGENT.md, workflow, CLAUDE.
 ### Adding a reusable workflow
 Add a `.yml` file to `.github/workflows/` with `on: workflow_call`. Document inputs and secrets in `.github/workflows/README.md`.
 
+## Refactoring
+
+See `knowledge/runbooks/refactoring-guide.md` for the phased refactoring playbook covering all Maui-managed repositories.
+
 ### Knowledge file conventions
 - Australian English throughout
 - Use headings to structure sections clearly

@@ -47,7 +47,9 @@ logs ─────┘                    └── facts ────┘
 
 ## Testing
 
-- All base models must have `not_null` and `unique` tests on primary keys
+- Base models require no tests — they are thin projections over source models, which carry
+  their own tests
+- Dataset models must have `not_null` and `unique` tests on primary keys
 - Use generic tests (defined in `schema.yml`) for common checks
 - Use singular tests (SQL files in `tests/`) for complex business logic
 - Run `dbt test` before committing
