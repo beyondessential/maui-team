@@ -102,7 +102,19 @@ extend = ".maui/ruff.toml"
 
 *Repos with raw (non-dbt) SQL* — symlink `.sqlfluff-raw` → `.maui/.sqlfluff-raw` using the same approach.
 
-**5. Add `CLAUDE.md` to `.gitignore`.** Each developer creates their own `CLAUDE.md` locally (not committed) containing just:
+**5. Set up shared skills** by symlinking `.claude/skills` to the submodule:
+
+```bash
+mkdir -p .claude
+# Windows (requires Developer Mode or admin):
+mklink /D .claude\skills .maui\.agents\skills
+# macOS/Linux:
+ln -s ../.maui/.agents/skills .claude/skills
+```
+
+Add `.claude/` to `.gitignore` (the symlink is local, not committed).
+
+**6. Add `CLAUDE.md` to `.gitignore`.** Each developer creates their own `CLAUDE.md` locally (not committed) containing just:
 
 ```
 @./AGENT.md
