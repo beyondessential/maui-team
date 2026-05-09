@@ -22,11 +22,11 @@ We don't spec trivial fixes, hotfixes, or exploratory analysis.
 
 | Artefact | Location |
 |---|---|
-| Templates | `maui-team/knowledge/specs/templates/` |
-| This guide | `maui-team/knowledge/specs/SPEC_GUIDE.md` |
+| Templates | `assets/templates/` |
+| This guide | `assets/SPEC_GUIDE.md` |
 | Populated specs | `<repo>/specs/<artefact-type>/<spec-name>.md` |
 
-A spec lives with the code it describes. The Maui central repo only carries templates and this guide.
+A spec lives with the code it describes. Templates and this guide are distributed via the `.maui` submodule and are relative to this skill's directory.
 
 ## Lifecycle
 

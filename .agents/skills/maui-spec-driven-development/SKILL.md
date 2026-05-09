@@ -7,12 +7,9 @@ description: Create spec-driven development (SDD) docs for Maui team data work �
 
 This skill produces spec docs for Maui team data work. Specs are the source of truth — code, tests, and documentation derive from them. When code and spec disagree, the spec is correct and the code is wrong.
 
-The skill produces two kinds of artefact:
+The skill produces **populated specs** — placed in each consuming repo under `<repo>/specs/<artefact-type>/<spec-name>.md`, alongside the code they describe.
 
-1. **Team-facing guide and templates** — placed once in `maui-team/knowledge/specs/` so the whole team can use them.
-2. **Populated specs** — placed in each consuming repo under `<repo>/specs/<artefact-type>/<spec-name>.md`, alongside the code they describe.
-
-Templates live centrally in `maui-team`. Populated specs live with the code.
+Templates and the SPEC_GUIDE live in this skill's `assets/` directory and are available to every repo through the `.maui` submodule. Populated specs live with the code.
 
 ## Core SDD principles
 
@@ -76,24 +73,21 @@ If the task does not fit any of these, ask whether it should be treated as one o
 
 ## Workflow
 
-### 1. Confirm setup
-Check whether `maui-team/knowledge/specs/` already exists. If not, this is the first spec — offer to copy `assets/SPEC_GUIDE.md` and `assets/templates/*.md` into `maui-team` as a separate setup step before drafting the user's spec.
-
-### 2. Identify mode and artefact type
+### 1. Identify mode and artefact type
 See entry modes above.
 
-### 3. Read the template
+### 2. Read the template
 Use `view` to read `assets/templates/<artefact-type>.md` from this skill before drafting. Don't reproduce templates from memory — read them fresh each time.
 
-### 4. Gather context
+### 3. Gather context
 - Mode A: read the code (prefer `ask-a-dev` / `github-repo-rag` for Maui repos)
 - Mode B: read the Linear issue
 - Mode C: interview
 
-### 5. Populate
+### 4. Populate
 Fill in the template top to bottom. Mark unknowns as `[TBD: <question>]` rather than guessing. Number every distinct rule as `BL-001`, `BL-002`… from the start — don't renumber later.
 
-### 6. Place the spec
+### 5. Place the spec
 Populated specs live in the consuming repo, NOT in `maui-team`. Default location:
 
 ```
@@ -105,9 +99,9 @@ Examples:
 - `tamanu-source-dbt/specs/dbt-model/coh__nutrition_registry.md`
 - `fsm-data-migration/specs/data-migration/patients.md`
 
-If the repo has no `specs/` directory, create it together with a brief `specs/README.md` pointing readers at `maui-team/knowledge/specs/SPEC_GUIDE.md`.
+If the repo has no `specs/` directory, create it together with a brief `specs/README.md` pointing readers at the SPEC_GUIDE in this skill's `assets/SPEC_GUIDE.md`.
 
-### 7. Cross-reference
+### 6. Cross-reference
 - Confirm with the user before adding `-- BL-XXX` comments to existing code (Mode A).
 - For Mode B specs, offer to attach the spec link back to the Linear issue.
 
@@ -162,16 +156,6 @@ No tooling enforces transitions — update the status line in the identity block
 | `DQ-XXX` | Data quality check (used in migration specs) |
 
 Number from 001 within each prefix per spec. Don't reuse IDs across specs.
-
-## First-time setup in `maui-team`
-
-When invoked for the first time and `maui-team/knowledge/specs/` doesn't exist:
-
-1. Copy `assets/SPEC_GUIDE.md` to `maui-team/knowledge/specs/SPEC_GUIDE.md`
-2. Copy `assets/templates/*.md` to `maui-team/knowledge/specs/templates/`
-3. Offer to draft a small addition to `maui-team/knowledge/AGENT.base.md` referencing the new specs directory, so all repos pulling the `.maui/` submodule become aware of it.
-
-Treat this as a separate PR from the user's first populated spec — keeps the setup change reviewable on its own.
 
 ## References
 
