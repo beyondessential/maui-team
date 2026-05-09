@@ -79,6 +79,23 @@ Flag as 🟡 **Suggestion** if:
 - `"query": "replace this"` in report config JSON files — this is an expected compile-time placeholder; the actual SQL is injected at build time (see `knowledge/standards/dbt-conventions.md`)
 - Files under `compiled/` — these are generated outputs; review the source, not the output
 - Auto-generated files (`models/surveys/`, `macros/translation.sql`, `list_tamanu_reports.md`) — flag the generator or source data instead
+- `-- BL-XXX`, `# BL-XXX`, or similar spec-anchor comments — these trace code back to spec clauses and must not be removed or treated as unnecessary documentation
+
+---
+
+## Spec-driven development (SDD)
+
+If the repo has a `specs/` directory, check for spec alignment:
+
+Flag as 🟡 **Suggestion** if:
+- New non-trivial logic lacks `BL-XXX` spec-anchor comments when a spec exists for that area
+- A `BL-XXX` reference in code does not match any clause in the corresponding spec
+- A PR introduces a new model, pipeline, or extract without an accompanying spec (suggest creating one)
+
+Flag as 🔴 **Blocker** if:
+- Code directly contradicts a spec clause it references (e.g. `-- BL-003: Exclude deleted` but the `where` clause does the opposite)
+
+Do **not** require specs for trivial bugfixes, hotfixes, or minor refactors.
 
 ---
 
