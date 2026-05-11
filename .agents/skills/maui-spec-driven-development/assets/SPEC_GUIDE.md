@@ -86,6 +86,18 @@ Reviewers should focus on:
 - Does each `AC` map to an implementable test?
 - Are open questions captured rather than glossed over?
 
+## Tightening
+
+A `BL` / `DQ` clause should compress to one declarative sentence. If a clause runs to three or more sentences, cut these patterns:
+
+- **Embedded rationale** ("because X, so Y") — move to `DV` or Change log.
+- **Duplicated cross-references** — one link is enough.
+- **Restated invariants** — anchor in one clause; the other refers back.
+- **Multi-clause parentheticals** — split or drop.
+- **Code-line hand-holding** — one line-range link suffices.
+
+A 40% length reduction with no normative loss is normal on a first pass.
+
 ## Retrospective specs
 
 When documenting existing code, write the spec to describe the *ideal* state. Where current code diverges, capture each divergence as a `DV-XXX` work item. Each divergence becomes follow-up work to bring code in line with spec — never edit the spec to match buggy code.
