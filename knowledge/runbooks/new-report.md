@@ -67,6 +67,22 @@ the sensitive version includes them.
 Create `models/reports/sql/sensitive/sensitive-<name>.sql` and
 `models/reports/config/sensitive/sensitive-<name>.json`.
 
+If the standard and sensitive reports share more than ~10 lines of SELECT/WHERE logic,
+extract the shared body into a macro at `macros/reports/<name>.sql` parameterised on
+`is_sensitive`, and reduce each SQL file to a single call:
+
+```sql
+-- models/reports/sql/standard/<name>.sql
+{{ <name>_report(is_sensitive=false) }}
+
+-- models/reports/sql/sensitive/sensitive-<name>.sql
+{{ <name>_report(is_sensitive=true) }}
+```
+
+The macro picks `ds__<name>` vs `ds__sensitive_<name>` based on the flag. See
+`encounter_summary_report` and `admissions_line_list_report` in `tamanu-source-dbt` for
+worked examples.
+
 ### 5. Add missing translations
 
 If step 2 found missing labels, add them to `report_translations_standard.csv`:
