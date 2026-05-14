@@ -47,11 +47,27 @@ logs ─────┘                    └── facts ────┘
 
 ## Testing
 
+Three kinds of tests sit alongside the models, all under whichever directory the repo's
+`dbt_project.yml` configures as `test-paths` (conventionally `data-tests/`):
+
+| Kind | File pattern | Use for |
+|------|-------------|---------|
+| Schema-level generic tests | inline `tests:` blocks in `<model>.yml` | column-level invariants — `not_null`, `unique`, `relationships`, `accepted_values`, or `dbt_utils.expression_is_true` for inequality / multi-column conditions on the model itself |
+| Unit tests (dbt 1.8+, mocked inputs) | `unit_test__<model>.yml` | scenario coverage of transformation logic against hand-crafted inputs |
+| Singular data tests (real data) | `data_test__<model>.sql` | invariants that cross-reference upstream tables or otherwise can't be expressed as a schema test |
+
+Conventions:
+
+- **One singular-test file per model.** Name it `data_test__<model>.sql`. Stitch multiple
+  assertions together inside the file with `union all`, and tag each failure row with a
+  discriminator column (e.g. `failed_ac` carrying the AC-ID from the spec) so the failing
+  assertion is identifiable from the test output.
 - Base models require no tests — they are thin projections over source models, which carry
   their own tests
 - Dataset models must have `not_null` and `unique` tests on primary keys
-- Use generic tests (defined in `schema.yml`) for common checks
-- Use singular tests (SQL files in `tests/`) for complex business logic
+- Where the repo follows SDD, name each test after the spec acceptance criterion it
+  asserts (`ac_NNN_<model>_<assertion>` for schema-level tests; the `failed_ac` column
+  inside the singular file otherwise). See the SDD spec format.
 - Run `dbt test` before committing
 
 ## Code quality rules
