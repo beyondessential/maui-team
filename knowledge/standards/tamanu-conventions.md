@@ -83,3 +83,14 @@ meta:
 ```
 
 Columns use `data_table_filter: yearmonth|array|date` and `data_table_metric: sum`.
+
+## Translation prefixes
+
+Translation string IDs in `report_translations_*.csv` follow a concept-prefix convention. The `report.reporting.` namespace is added automatically by `translate_label()` — only the concept portion appears in calls and CSV keys.
+
+| Source of the label | Prefix | Example key |
+|---------------------|--------|-------------|
+| Field bound to a specific Tamanu survey | `survey<SurveyID>` | `surveyPatientVitalsHeight`, `surveyHIVVisitARTRegimen` |
+| Generic concept not tied to one survey | bare concept | `vitalSign`, `encounterId`, `patientName` |
+
+`<SurveyID>` matches the Tamanu survey ID (camelCase, as it appears in `surveys.id`). The trailing portion is the field name in camelCase.
