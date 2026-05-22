@@ -42,6 +42,7 @@ Use Google-style docstrings. Only add them where they aid understanding — omit
 - Use specific exception types, not bare `except:`
 - Log errors with context before re-raising or handling
 - Don't suppress exceptions silently
+- **Fail loudly when a default would violate a spec rule.** If a caller omits a value and the resulting default would silently contradict a `BL-XXX` / `DQ-XXX` clause (or any documented contract), return a clear error or raise — don't fall back to the unsafe default. Convenience fallbacks that drift from the spec are foot-guns: the next operator inherits behaviour that "works" until it produces wrong data. Prefer a one-line error pointing at the missing config over a silent write of the wrong value.
 
 ## Project-specific conventions
 
