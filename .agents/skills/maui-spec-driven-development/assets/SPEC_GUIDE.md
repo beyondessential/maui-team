@@ -51,6 +51,8 @@ where deleted_at is null
 
 Tests reference the same IDs. A reader can grep one ID and find rule, code, and test in a single search.
 
+**The pointer is one-way: code → spec.** Specs should not cite code by file path and line number. Line numbers rot on every unrelated edit; the rot is silent (no static check catches it) and induces spec-side churn on every refactor that moves a function. If a spec rule needs to reference code at all, use a symbol name (e.g. `run_postgres_copy_import`, `_commit_batch`) — stable across line moves and still grep-navigable. In practice, a tight BL clause rarely needs a code reference at all: the spec describes behaviour, the code implements it, and the `# BL-XXX:` comment provides the navigation trail.
+
 ## ID conventions
 
 | Prefix | Use |
@@ -94,9 +96,22 @@ A `BL` / `DQ` clause should compress to one declarative sentence. If a clause ru
 - **Duplicated cross-references** — one link is enough.
 - **Restated invariants** — anchor in one clause; the other refers back.
 - **Multi-clause parentheticals** — split or drop.
-- **Code-line hand-holding** — one line-range link suffices.
+- **Code-line hand-holding** — drop entirely. Specs don't cite code by line number (see *Spec anchoring*); the `# BL-XXX:` comment in the code is the trail.
 
 A 40% length reduction with no normative loss is normal on a first pass.
+
+## Before merging
+
+Specs accrete on a feature branch (multiple change-log entries, `DV-XXX` items that get resolved mid-branch, `OQ-XXX` items that get answered before approval). Before merging to the trunk, **collapse the resolved entries rather than mark them resolved**:
+
+- `DV-XXX` items resolved on this branch → **delete the row** rather than strike-through or mark "Resolved YYYY-MM-DD". From the trunk's perspective the divergence never existed.
+- `OQ-XXX` items closed on this branch → same treatment. Delete the row.
+- Multiple change-log entries from the branch's iteration → squash into one entry dated at merge time. The trunk's change log records *what landed*, not how the branch got there.
+- Identity-block `Created` / `Last updated` dates → align with the merge date if the spec is landing as one record.
+
+The principle: the trunk's spec is a contract, not a history book. Commit history captures *how we got here*; the spec captures *what we agreed to*. Resolved divergences and answered open questions are tracked in git, not in the spec.
+
+This applies even for retrospective specs landing alongside their first implementation — the `DV-XXX` items that were resolved as part of bringing the spec and code into alignment shouldn't ship as historical record in the merged spec.
 
 ## Retrospective specs
 
