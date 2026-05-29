@@ -1,6 +1,6 @@
 <!--
 PR title format: <type>(<scope>): <short description> (<linear-id>)
-e.g. feat(reports): add diabetes line-list report (BES-1234)
+e.g. feat(reports): add diabetes line-list report (MAUI-1234)
 Types: feature, feat, fix, hotfix, chore, refactor, docs
 -->
 
@@ -13,7 +13,7 @@ the scope without opening the diff. -->
 
 ## Linear / spec
 
-- Linear: BES-XXXX
+- Linear: MAUI-XXXX
 - Spec: `<repo>/specs/<artefact-type>/<spec-name>.md` *(omit if no spec — fine for
   trivial fixes; see `.maui/knowledge/standards/sdd-conventions.md` for when a
   spec is required)*

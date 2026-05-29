@@ -6,10 +6,10 @@ a repo has project-specific Linear conventions.
 ## Workspace and team
 
 - **Workspace:** `beyondessential`
-- **Team prefix:** `BES`
-- **Project key in URLs:** `BES-NNN` (e.g. `BES-1234`)
+- **Team prefix:** `MAUI`
+- **Project key in URLs:** `MAUI-NNN` (e.g. `MAUI-1234`)
 
-Issue IDs are referenced as `BES-NNN` in spec identity blocks, PR titles, and
+Issue IDs are referenced as `MAUI-NNN` in spec identity blocks, PR titles, and
 branch names.
 
 ## Issue lifecycle
@@ -46,10 +46,10 @@ project level.
 ## Linking issues to PRs and specs
 
 - **PR title** — include the Linear ID at the end:
-  `feat(reports): add diabetes line-list report (BES-1234)`
-- **PR body** — Linear auto-links from `BES-NNN` mentions; no manual URL needed
+  `feat(reports): add diabetes line-list report (MAUI-1234)`
+- **PR body** — Linear auto-links from `MAUI-NNN` mentions; no manual URL needed
 - **Branch name** — include the Linear ID in `kebab-case`:
-  `feat/bes-1234-diabetes-line-list`
+  `feat/maui-1234-diabetes-line-list`
 - **Spec identity block** — every spec template has a **Linear issue** field;
   populate it with the issue's URL
 

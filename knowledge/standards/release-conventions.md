@@ -64,13 +64,13 @@ Release notes live in `CHANGELOG.md` at each repo's root, following the
 ## [2.49.3] — 2026-06-12
 
 ### Added
-- `der__cohort_diabetes` for fj deployment (BES-1234)
+- `der__cohort_diabetes` for fj deployment (MAUI-1234)
 
 ### Changed
-- Updated `metric__hypertension_controlled` to use the new threshold (BES-1240)
+- Updated `metric__hypertension_controlled` to use the new threshold (MAUI-1240)
 
 ### Fixed
-- Fixed timezone bug in `encounter_summary_line_list` (BES-1247)
+- Fixed timezone bug in `encounter_summary_line_list` (MAUI-1247)
 
 ### Deprecated
 - `coh__ncd` — use `der__cohort_ncd` instead. Remove in 2.50.x

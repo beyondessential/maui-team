@@ -8,7 +8,7 @@
 | **Type** | Tupaia dashboard |
 | **Status** | `draft` |
 | **Owner** | `@<github_handle>` |
-| **Linear issue** | [BES-XXX](url) |
+| **Linear issue** | [MAUI-XXX](url) |
 | **Country / deployment** | |
 | **Programme** | _e.g. NCD, RMNCH, IDSR_ |
 | **Stakeholders** | _e.g. MoH NCD team, country focal point_ |

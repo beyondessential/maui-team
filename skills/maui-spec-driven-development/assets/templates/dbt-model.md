@@ -10,7 +10,7 @@
 | **Materialisation** | `[view \| table \| incremental \| ephemeral]` |
 | **Status** | `draft` |
 | **Owner** | `@<github_handle>` |
-| **Linear issue** | [BES-XXX](url) |
+| **Linear issue** | [MAUI-XXX](url) |
 | **Repo** | `<repo-name>` |
 | **Created** | YYYY-MM-DD |
 | **Last updated** | YYYY-MM-DD |

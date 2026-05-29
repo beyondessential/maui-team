@@ -8,7 +8,7 @@
 | **Type** | Data extract |
 | **Status** | `draft` |
 | **Owner** | `@<github_handle>` |
-| **Linear issue** | [BES-XXX](url) |
+| **Linear issue** | [MAUI-XXX](url) |
 | **Requester** | `<stakeholder name + role>` |
 | **Delivery cadence** | `[one-off \| weekly \| monthly \| on-request]` |
 | **Created** | YYYY-MM-DD |
