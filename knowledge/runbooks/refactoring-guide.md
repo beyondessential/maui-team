@@ -1,7 +1,8 @@
 # Refactoring Guide
 
 Covers all Maui-managed repositories: `tamanu-source-dbt`, `data-staging`, `data-lake`
-(dbt models and Dagster assets). Use this guide when planning or executing refactoring work
+(dbt models and Dagster assets — to be renamed to `bes-data-pipelines`; rename pending
+dependency updates). Use this guide when planning or executing refactoring work
 across any of these layers.
 
 ---
@@ -26,8 +27,12 @@ Phase 1 — Enforcement   (automated, low risk)
 Phase 2 — Structure     (layer violations, naming, materialisations)
 Phase 3 — Testing       (coverage uplift)
 Phase 4 — Scalability   (incremental, partitioning, macro consolidation)
-Phase 5 — Cohort migration  (ds__ → coh__ for registry models)
+Phase 5 — Architecture migration  (ds__ registries → der__cohort_<program>; dim__ → ref__/can__)
 ```
+
+Phase 5 reflects the in-flight architecture transition described in
+`../architecture/data-architecture.md` (D2, D7). New work uses the new prefixes;
+existing models migrate as they are touched.
 
 ---
 
@@ -103,7 +108,7 @@ grep -rL "meta:" models/ --include="*.yml" \
   | grep -v "sources\|surveys\|compiled"
 ```
 
-All non-generated model YAML files must include a `meta:` block. See `metadata.md` for
+All non-generated model YAML files must include a `meta:` block. See `../standards/dbt-metadata.md` for
 valid field values.
 
 ### `order by` in wrong layers
@@ -121,37 +126,56 @@ grep -rn "order by" models/ --include="*.sql" \
 
 ### Layer violations
 
-Verify model lineage respects the defined stack:
+Verify model lineage respects the defined stack (see `dbt-conventions.md` for the full
+layer table):
 
 ```
-sources/logs → bases → [int__] → surveys/facts/coh__ → [int__] → datasets → [int__] → reports
+sources/logs
+   │
+ bases ──┬── ref__ ──────────┐
+         ├── lkp__ ──────────┤
+         │                   ├── can__ ── der__ ── metric__ ── ds__ ── reports
+         └── surveys, facts (legacy, in active use)
 ```
 
-Check for models that skip layers (e.g. a dataset joining directly to a source, or a report
-joining to a base). Use `ref()` graph traversal or dbt lineage tools.
+`int__` ephemerals may sit between any two layers. The hard rule (D10) is that
+**only `bases/` reads `public.*`** — every other layer reads via `ref()`.
+
+Check for models that skip layers or bypass `bases/`. Use `ref()` graph traversal or
+dbt lineage tools.
 
 Common violations to search for:
 
 ```bash
-# Datasets referencing sources directly
-grep -rn "source(" models/datasets/ --include="*.sql"
+# Any model outside bases/ reading public.* via source() — violates D10
+grep -rn "source(" models/ --include="*.sql" \
+  | grep -v "models/sources\|models/logs\|models/bases"
 
-# Reports referencing bases directly (should go through facts/datasets)
+# Reports reading bases directly (should pass through ds__, metric__, der__, can__, or facts)
 grep -rn "ref('base_\|ref('logs_" models/reports/ --include="*.sql"
 ```
 
 ### Materialisations audit
 
-Review every non-ephemeral model and verify its materialisation is justified:
+Review every non-ephemeral model and verify its materialisation is justified. The new
+taxonomy is env-aware (replica vs production bundle) — see
+`dbt-conventions.md` § Environment-aware materialisation for the `target.name` pattern.
 
 | Layer | Expected default | Override allowed when |
 |---|---|---|
-| `bases` | `view` | Never — bases are always views |
+| `bases/` | `view` | Never — bases are always views |
+| `lkp__` | `view` | Never — lookups are always views over seeds |
 | `int__` | `ephemeral` | Never — intermediates are always ephemeral |
-| `facts`, `surveys`, `coh__` | `view` | — |
-| `datasets` | `view` | Frequently queried by Tupaia — use `table` |
-| Reports (Tupaia aggregation) | `table` | — |
-| Reports (Tamanu line-list) | `view` | — |
+| `ref__` | `view` | — |
+| `can__`, `der__`, `metric__`, `ds__` | env-aware: `view` in `reporting_*` bundle, `view` / `incremental` / `table` on `analytics_*` replica | Override permitted on replica targets only; production bundle is always a view |
+| `models/reports/` (Tamanu) | `view` | Always — production bundle |
+| Tupaia-only `metric__` outside the report chain | `incremental` or `table` on replica | — |
+| `facts`, `surveys`, `coh__` (legacy) | `view` | — |
+
+Models in the transitive closure of `models/reports/` ship to production via the
+compiled bundle and must be production-safe SQL (no Python models, valid against
+production schema, tractable as a runtime view). Replica-only models can use heavier
+materialisations.
 
 Search for intermediates incorrectly materialised as views or tables:
 
@@ -161,8 +185,8 @@ grep -rn "materialized.*view\|materialized.*table" \
 ```
 
 View-on-view nesting (a view selecting from another view) carries a runtime penalty. If a
-dataset queries several views joined together, consider whether the shared join logic should
-become an `ephemeral` intermediate.
+`ds__` or `metric__` queries several views joined together, consider whether the shared join
+logic should become an `ephemeral` `int__` intermediate.
 
 ### Naming consistency
 
@@ -170,11 +194,18 @@ Run a naming audit against the conventions in `dbt-conventions.md`:
 
 | Layer | Expected pattern | Check |
 |---|---|---|
-| `facts` | `fct__<description>` | `grep -rn "^  - name:" models/facts/` |
+| `bases/` | `base__<entity>` | `grep -rn "^  - name:" models/bases/` |
+| `ref__` | `ref__<entity>` | — |
+| `lkp__` | `lkp__<entity>` | — |
+| `can__` | `can__<entity>` | — |
+| `der__` | `der__<element>` (e.g. `der__cohort_<program>`) | — |
+| `metric__` | `metric__<id>` (snake-case, matches `metric_definitions.csv`) | — |
 | `int__` | `int__<description>` | `grep -rn "^  - name:" models/intermediate/` |
-| `datasets` | `ds__<description>` | — |
-| `coh__` | `coh__<description>` | — |
-| Reports | `<description>_line_list` | — |
+| `ds__` | `ds__<description>` | — |
+| Reports | `<description>_line_list` (and similar suffixes) | — |
+| `facts` (legacy) | `fct__<description>` | `grep -rn "^  - name:" models/facts/` |
+| `coh__` (legacy, renaming) | `coh__<program>` → `der__cohort_<program>` | new cohorts use `der__`; existing models migrate when touched |
+| `dim__` (legacy, soft retirement) | `dim_<entity>` | new work uses `ref__` / `can__` |
 
 Flag any model whose file name does not match the expected prefix for its layer. Rename and
 update all downstream `ref()` calls.
@@ -357,16 +388,10 @@ for country in fj ki nr pw tv ws; do
 done | sort | uniq -c | sort -rn | awk '$1 >= 3'
 ```
 
-Known duplicates confirmed in the codebase:
-- `ds__encounter_medical_coding` and `ds__medical_coding` — present in `nr` and `ws` with
-  near-identical structure. Consolidate into a `data-staging` macro parametrised by
-  survey form ID.
-- `fct_survey_medical_coding` — present in `nr` and `ws`.
-- `fct_survey_patient_vitals` — present in `nr` and `ws`.
-- `dim_date`, `dim_diagnosis`, `dim_location`, `dim_patient` — present in every country
-  project with only the `_{country}` suffix varying. These are strong macro candidates;
-  the shared dimension logic should live in `data-staging`, with country projects passing
-  deployment-specific reference data as variables or seeds.
+The specific known-duplicate inventory used to live here but rots quickly. It now
+lives in the Linear consolidation epic (see project board). Use the command above to
+generate a fresh inventory before each dedup pass; treat any result that appears in
+3+ country projects as a consolidation candidate.
 
 **When to consolidate vs keep separate:**
 
@@ -378,23 +403,50 @@ structures that are unlikely to generalise.
 
 ---
 
-## Phase 5 — Cohort migration
+## Phase 5 — Architecture migration
 
-Existing `ds__` registry models should be migrated to the `coh__` semantic layer when:
+Two migrations run in parallel under Phase 5, both following from
+`../architecture/data-architecture.md` (D2, D7).
+
+### 5a — `ds__` registries → `der__cohort_<program>`
+
+Existing `ds__` registry models should be migrated to the `der__` derived-elements layer
+when:
 - The program registry requires temporal analysis (incidence, LTFU, retention)
 - The model is used as a shared base for both Tamanu and Tupaia outputs
 
-See `cohort-conventions.md` for the full migration pattern. Steps:
+See `derived-elements-conventions.md` for the full migration pattern. Steps:
 
 1. Check whether the program already has a `cohort_definition_id` in
    `tamanu-source-dbt/seeds/cohort_definitions.csv`. Register it if not.
-2. Build `coh__<n>_registry` from the existing conditions pivot and exit CTE patterns.
+   (Phase 0 plans to consolidate this seed into the unified `metric_definitions.csv`
+   registry — track that change separately.)
+2. Build `der__cohort_<program>_registry` from the existing conditions pivot and exit
+   CTE patterns. (New work uses `der__cohort_*`; existing `coh__*` models keep their
+   prefix until they're touched again.)
 3. Build `int__<n>_cohort_<period>_patients` for the patient selection scaffold.
-4. Build `coh__<n>` with the four required OMOP-lite columns.
-5. Update Tamanu line-list and Tupaia aggregation outputs to source from `coh__<n>`.
+4. Build `der__cohort_<program>` with the four required OMOP-lite columns.
+5. Update Tamanu line-list and Tupaia outputs to source from `der__cohort_<program>`.
 6. Deprecate the `ds__` model — do not delete until all downstream refs are updated.
 
-Reference implementation: `tamanu-dbt-msf-syria` models listed in `cohort-conventions.md`.
+Reference implementation: `tamanu-dbt-msf-syria` models listed in
+`../standards/derived-elements-conventions.md` § Legacy `coh__` reference (the
+`tamanu-dbt-msf-syria` files still carry the legacy prefix; the conventions doc
+includes the migration steps).
+
+### 5b — `dim__` → `ref__` / `can__` (soft retirement)
+
+The `dim__` layer (e.g. `dim_patient`, `dim_location`, `dim_model`) is on the soft
+retirement path. New work splits the responsibilities:
+
+- Health-system entities (care site, location, provider) → `ref__` reading from
+  `bases/` and applying OMOP column naming
+- Patient and clinical-event entities → `can__` (`can__person`,
+  `can__visit_occurrence`, …)
+
+Existing `dim__` models stay in place until their downstream consumers are updated.
+Migrate opportunistically when touching a model; don't delete `dim__` until all refs
+point at the new layer.
 
 ---
 

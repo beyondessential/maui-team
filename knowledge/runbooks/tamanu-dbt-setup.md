@@ -1,14 +1,20 @@
-# Tamanu dbt Project Setup Guide
+# Runbook: Tamanu dbt project set-up
+
+How to set up a new `tamanu-dbt-<deployment>` project from scratch, or a fresh clone
+of an existing one. For the broader architecture context, see
+`../architecture/data-architecture.md`. For the layer taxonomy and conventions, see
+`../standards/dbt-conventions.md`.
 
 ## Prerequisites
 
-1. **[uv](https://docs.astral.sh/uv/)** installed on your system
-2. **PostgreSQL** database access to Tamanu instance
-3. **Git** for version control
+1. [uv](https://docs.astral.sh/uv/) installed
+2. PostgreSQL access to the Tamanu replica (see
+   `environment-and-credentials.md` for how to request credentials)
+3. Git, with submodule support
 
-## Installation Steps
+## Installation steps
 
-### 1. Clone and Setup Environment
+### 1. Clone and set up the environment
 
 ```bash
 git clone <repository-url>
@@ -16,59 +22,56 @@ cd <project-directory>
 uv sync
 ```
 
-### 2. Configure Environment Variables
+### 2. Configure environment variables
 
 ```bash
-# Copy environment template
 cp .env.example .env
-
-# Edit .env file with your database credentials
+# Edit .env with the database credentials from your team lead
+# (see environment-and-credentials.md if you don't have them)
 ```
 
-### 3. Install dbt Dependencies
+### 3. Install dbt dependencies
 
 ```bash
-# Install dbt packages
 dbt deps
-
-# Test database connection
-dbt debug
+dbt debug   # verifies the connection
 ```
 
-### 4. Project Customisation
+### 4. Project customisation
 
-Update the following files for your specific project:
+Update the following files for the new deployment:
 
-#### pyproject.toml
-- `name`: Update to your project name
-- `version`: Update to match your Tamanu version
+#### `pyproject.toml`
+- `name` — project name (e.g. `tamanu-dbt-fj`)
+- `version` — match the deployed Tamanu version
 
-#### dbt_project.yml
-- `name`: Update to your project name (must match `pyproject.toml`)
-- `profile`: Update to match your project name
+#### `dbt_project.yml`
+- `name` — must match `pyproject.toml`
+- `profile` — must match `pyproject.toml`
 
-#### config/profiles.yml
-- Profile name: Update to match your project name
-- `target`: Update to your environment name (e.g., dev, staging, prod)
+#### `config/profiles.yml`
+- Profile name — match `dbt_project.yml`
+- `target` — environment name (e.g. `dev`, `staging`, `prod`)
 
-#### packages.yml
-- `revision`: Update to match your Tamanu version (e.g., "2.32.0")
-- Use specific version tags instead of "dev" branch for production deployments
+#### `packages.yml`
+- `revision` — pin to the deployed Tamanu version (e.g. `2.32.0`); never use a branch
+  reference. See `../standards/dbt-conventions.md` § Package management.
 
-#### README.md
-- Update the title and description to reflect the deployment (project name, country/region, Tamanu instance)
-- Remove the template boilerplate once the project-specific content is in place
+#### `README.md`
+- Update title and description for the deployment (project name, country/region,
+  Tamanu instance). Remove the template boilerplate.
 
-#### AGENT.md
-Create `AGENT.md` at the repo root with the standard imports including the metadata standard:
+#### `AGENT.md`
+Create `AGENT.md` at the repo root, importing the standards relevant to a
+`tamanu-dbt-<deployment>` repo:
 
 ```
 @./.maui/knowledge/AGENT.base.md
 @./.maui/knowledge/standards/git-conventions.md
 @./.maui/knowledge/standards/sql-conventions.md
 @./.maui/knowledge/standards/dbt-conventions.md
-@./.maui/knowledge/standards/tamanu-conventions.md
-@./.maui/knowledge/standards/metadata.md
+@./.maui/knowledge/standards/tamanu-dbt-conventions.md
+@./.maui/knowledge/standards/dbt-metadata.md
 
 ---
 
@@ -77,15 +80,16 @@ Create `AGENT.md` at the repo root with the standard imports including the metad
 <Brief description of the deployment.>
 ```
 
-#### CLAUDE.md
-Create `CLAUDE.md` at the repo root that imports `AGENT.md`:
+#### `CLAUDE.md`
+Create `CLAUDE.md` at the repo root (gitignored — per-developer, not committed):
 
 ```
 @./AGENT.md
 ```
 
-#### .github/workflows/publish-artifacts.yml
-Create `.github/workflows/publish-artifacts.yml` to call the reusable workflow on release:
+#### `.github/workflows/publish-artifacts.yml`
+Create `.github/workflows/publish-artifacts.yml` calling the reusable workflow on
+release:
 
 ```yaml
 name: Publish Artifacts
@@ -100,35 +104,31 @@ jobs:
     secrets: inherit
 ```
 
-The workflow requires the following secrets and variables to be configured in the repository settings:
+Required secrets and repository variables: `META_CERT`, `META_KEY`, `META_URL`. AWS
+credentials are obtained via OIDC — the IAM role
+`arn:aws:iam::491618206332:role/gha-s3-tamanu-translations` must trust the calling
+repository.
 
-- `META_CERT` — client certificate for authenticating with the meta-server
-- `META_KEY` — private key for the client certificate
-- `META_URL` — base URL of the meta-server (repository variable)
+See `../../.github/workflows/README.md` for the full workflow reference and
+`environment-and-credentials.md` for how to obtain the secrets.
 
-AWS credentials are obtained via OIDC — the IAM role `arn:aws:iam::491618206332:role/gha-s3-tamanu-translations` must trust the calling repository.
-
-### 5. Generate Survey Models
+### 5. Generate survey models
 
 ```bash
 uv run python dbt_packages/tamanu_source_dbt/scripts/generate_survey_models.py
 ```
 
-### 6. Build Reporting Assets
+### 6. Build reporting assets
 
 ```bash
 uv run python dbt_packages/tamanu_source_dbt/scripts/build_reporting_assets.py
 ```
 
-This script:
-- Cleans and rebuilds dbt dependencies
-- Runs dbt models for the specified target
-- Generates documentation
-- Compiles models
-- Creates reporting schema SQL files
-- Generates project reports
+This script cleans dbt deps, runs models against the configured target, generates
+docs, compiles models, and creates the reporting schema SQL files plus the project
+reports list.
 
-### 7. Build and Test
+### 7. Build and serve docs
 
 ```bash
 dbt run
@@ -136,7 +136,7 @@ dbt docs generate
 dbt docs serve
 ```
 
-## Available Scripts
+## Available scripts
 
 From the `tamanu-source-dbt` package:
 
@@ -144,42 +144,34 @@ From the `tamanu-source-dbt` package:
 - `uv run python dbt_packages/tamanu_source_dbt/scripts/list_tamanu_reports.py`
 - `uv run python dbt_packages/tamanu_source_dbt/scripts/build_reporting_assets.py`
 
-## Project Structure
+## Project structure
 
-```
-├── models/
-│   ├── datasets/        # Flattened models for end users
-│   ├── intermediate/    # Multi-table joins (ephemeral)
-│   ├── reports/         # Final reporting models
-│   └── surveys/         # Survey-specific models
-├── config/
-│   └── profiles.yml     # Database connection configuration
-├── dbt_packages/        # External dependencies (auto-generated)
-├── analyses/            # Ad-hoc SQL analyses
-├── macros/              # Reusable SQL macros
-├── seeds/               # Static reference data
-├── snapshots/           # Point-in-time data snapshots
-└── tests/               # Data quality tests
-```
+See `../standards/dbt-conventions.md` § Model layers for the canonical layer table.
+Deployment repos typically organise `models/` by layer prefix (`bases/`, `ref__`,
+`lkp__`, `can__`, `der__`, `metric__`, `int__`, `ds__`, `reports/`); legacy domain
+directories (`facts/`, `surveys/`, `dim__`/`datasets/`) may also be present in older
+deployments.
 
-## Development Workflow
+## Development workflow
 
-1. Create custom models in the appropriate `models/` subdirectory
-2. Test models with `dbt run --select model_name`
-3. Document models using `schema.yml` files
-4. Generate documentation with `dbt docs generate`
-5. Commit changes following the git conventions
+1. Create models in the appropriate directory (see layer table referenced above)
+2. Test models with `dbt run --select <model_name>`
+3. Document models in sibling `.yml` files; populate the `meta:` block per
+   `../standards/dbt-metadata.md`
+4. Generate docs with `dbt docs generate`
+5. Commit per `../standards/git-conventions.md`
 
 ## Troubleshooting
 
-### Common Issues
+### Common issues
 
-1. **Connection Error**: Verify environment variables in `.env`
-2. **Package Installation Failed**: Check internet connection and GitHub access
-3. **Model Compilation Error**: Verify SQL syntax and model dependencies
+1. **Connection error** — verify `.env` variables; cross-check against
+   `environment-and-credentials.md`
+2. **Package installation failed** — check internet access and GitHub credentials
+3. **Model compilation error** — verify SQL syntax and `ref()` / `source()` dependencies
 
-### Getting Help
+### Getting help
 
 - [dbt documentation](https://docs.getdbt.com/)
-- Review the `tamanu-source-dbt` package documentation
-- Contact your project administrator for database access issues
+- The `tamanu-source-dbt` package docs
+- Team lead for database access issues

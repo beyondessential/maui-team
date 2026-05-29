@@ -1,0 +1,38 @@
+# Developer quick reference
+
+Fast lookup of "what layer should I use?" and "what's the materialisation?".
+For rationale, see [`decisions.md`](decisions.md).
+
+## What layer should I use?
+
+| I want to… | Use layer | Notes |
+|---|---|---|
+| Model a patient demographic or clinical event (diagnosis, measurement, drug) | `can__` | OMOP-lite shape. Joins to `ref__` for care site / location / provider. See D1, D2 |
+| Model cohort membership for a program registry | `der__cohort_<program>` | Builds on `can__`. See D2, `../../standards/derived-elements-conventions.md` |
+| Model condition or drug eras | `der__condition_era` / `der__drug_era` | Future pattern. See D2 |
+| Define a health indicator | `metric__` + entry in `metric_definitions.csv` | Wide format, explicit disaggregation columns, mandatory registry entry. See D5 |
+| Build a consumer-shaped dataset (patient summary, line list, extract) | `ds__` | Joins across `can__`, `der__`, `metric__`. See D6 |
+| Add a Tamanu report | `models/reports/sql/` + `models/reports/config/` | SQL + JSON config. See `../../runbooks/new-report.md` |
+| Add standard reference data (age bands, modality types) | `lkp__` seed in `tamanu-source-dbt` | Real data shipped as seed. See D2 |
+| Add a cross-system mapping (Tamanu ↔ Tupaia facilities) | `lkp__` seed in `tamanu-dbt-<deployment>` | Per-deployment by nature. See D2, OQ-008 |
+| Add OMOP health system data (care sites, locations, providers) | `ref__` reading from `bases/` | OMOP column naming applied. Deployment's real data flows through automatically. See D2 |
+| Read from a Tamanu source table | `bases/` only | Never reference `public.*` directly outside `bases/`. See D10 |
+| Add a deployment-specific model override | `tamanu-dbt-<deployment>` | Only when customisation justifies a separate repo. See [`production-promotion.md`](production-promotion.md) § Version skew |
+| Decide if work needs a spec first | Check D8 | Required for new `can__`, `der__`, `metric__`, `ds__`, migrations, semantic changes |
+
+## Materialisations at a glance
+
+`bases/` and `lkp__` are always views. For all other layers, the question is whether the model is in the transitive closure of `models/reports/` (the production bundle).
+
+| Layer | On replica | In production bundle |
+|---|---|---|
+| `bases/` | `view` (always) | `view` (always) |
+| `ref__` | `view` | `view` (if in report chain; otherwise not built) |
+| `lkp__` | `view` (always) | `view` (if in report chain; otherwise not built) |
+| `can__` | `view` or `incremental` | `view` (if in report chain; otherwise not built) |
+| `der__` | `view` or `incremental` | `view` (if in report chain; otherwise not built) |
+| `metric__` | `incremental` or `table` | `view` (if in report chain; otherwise not built) |
+| `ds__` | `view` or `table` | `view` (if in report chain; otherwise not built) |
+| `models/reports/` | `view` | `view` |
+
+Models outside the report chain stay replica-only — they don't ship to production. Environment is distinguished via `target.name` prefix — `reporting_*` targets compile for production, `analytics_*` targets run on the replica. See [`production-promotion.md`](production-promotion.md) for the SQL config pattern.

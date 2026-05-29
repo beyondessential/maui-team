@@ -76,26 +76,36 @@ Tiers indicate the quality and readiness of a dataset. They map onto dbt layers:
 | Tier | dbt layers | Meaning |
 |---|---|---|
 | `bronze` | `sources`, `logs` | Raw, as-ingested. No transformation, no guarantees. Source-faithful. |
-| `silver` | `bases`, `intermediate` | Cleaned and tested. Deleted records removed, types cast, PII masked. Trusted structure, not yet user-facing. |
-| `gold` | `facts`, `surveys`, `datasets`, `reports` | Business-ready. Joined, aggregated, documented. Safe for analysts and Tupaia to consume. |
+| `silver` | `bases/`, `ref__`, `lkp__`, `int__` | Cleaned and tested. Deleted records removed, types cast, PII masked, OMOP column shapes applied (`ref__`), curated lookups (`lkp__`). Trusted structure, not the final consumer surface. |
+| `gold` | `can__`, `der__`, `metric__`, `ds__`, `models/reports/`, plus legacy `facts`, `surveys`, `dim__` | Business-ready. Joined, aggregated, documented. Safe for analysts and Tupaia to consume. Includes canonical clinical events (`can__`), derived elements (`der__`), indicators (`metric__`), consumer datasets (`ds__`), and reports. |
+
+The taxonomy comes from `../architecture/data-architecture.md` (D2). See
+`dbt-conventions.md` § Model layers for the full per-layer reference. The legacy
+`coh__` prefix shares the `der__` tier (gold) until renamed.
 
 Edge cases:
 - External sources (NIWA, FluTracking raw) → `bronze`, even if they arrive pre-cleaned, because Maui does not control or test them
 - mSupply bases → `silver` once cleaned, same as Tamanu bases
 - Cross-instance aggregations → `gold` if user-facing, `silver` if intermediate joins
+- `ref__` mock seeds (shipped for package testing/CI) → `silver` like the production `ref__` views they stand in for
+- `metric__` definitions in `metric_definitions.csv` (the seed itself, not the model) → `silver`; the `metric__` model derived from them is `gold`
 
 ---
 
 ## Classification values
 
-Classification levels indicate the sensitivity of data and the handling controls required. They are defined in BES's [Data Classification Policy](https://beyond-essential.slab.com/posts/p-9-data-classification-policy-4e4cypfy).
+Classification levels indicate the sensitivity of data and the handling controls
+required. The authoritative source is BES's
+[Data Classification Policy](https://beyond-essential.slab.com/posts/p-9-data-classification-policy-4e4cypfy)
+(Slab — requires BES sign-in). The summary below mirrors the policy so this file is
+self-contained for off-network readers; if the two ever disagree, the policy wins.
 
-| Level | Description |
-|---|---|
-| `restricted` | Highest sensitivity. Includes personal health information, PII, credentials, and data subject to regulatory or contractual obligations. Strict access controls and encryption required. |
-| `confidential` | Sensitive business or operational data not intended for external audiences. Access on a need-to-know basis. |
-| `internal` | General internal information. Not sensitive, but not approved for public release. Available to all staff. |
-| `public` | Approved for unrestricted external sharing. No access controls required. |
+| Level | Sensitivity | Includes | Handling controls |
+|---|---|---|---|
+| `restricted` | Highest | Personal health information (PHI), PII, credentials, data subject to regulatory or contractual obligations | Strict access controls and encryption at rest + in transit; access logged; never copy outside approved infrastructure |
+| `confidential` | Sensitive | Internal operational / business data not for external audiences (financials, partnership terms, internal performance data) | Access on a need-to-know basis; do not share externally without authorisation |
+| `internal` | Internal-only | General internal information without specific sensitivity | Available to all BES staff; not approved for public release |
+| `public` | None | Explicitly approved for unrestricted external sharing (marketing material, published reports, open-data outputs) | No access controls required |
 
 ### Classification guide
 

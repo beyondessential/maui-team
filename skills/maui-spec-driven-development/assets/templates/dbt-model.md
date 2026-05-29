@@ -4,9 +4,9 @@
 
 | Field | Value |
 |---|---|
-| **Name** | `<model_name>` (e.g. `coh__nutrition_registry`) |
+| **Name** | `<model_name>` (e.g. `der__cohort_nutrition_registry`) |
 | **Type** | dbt model |
-| **Layer** | `[base \| int \| fct \| dim \| coh \| ds \| report]` |
+| **Layer** | `[base \| ref \| lkp \| can \| der \| metric \| int \| ds \| report \| fct (legacy) \| dim (legacy) \| coh (legacy)]` |
 | **Materialisation** | `[view \| table \| incremental \| ephemeral]` |
 | **Status** | `draft` |
 | **Owner** | `@<github_handle>` |
@@ -35,8 +35,8 @@ State explicitly. The grain definition is the most common source of model bugs.
 
 | Reference | Why we need it |
 |---|---|
-| `{{ ref('base__patients') }}` | Patient demographics |
-| `{{ ref('coh__<name>') }}` | Cohort definition |
+| `{{ ref('can__person') }}` | Person demographics (OMOP-shaped) |
+| `{{ ref('der__cohort_<name>') }}` | Cohort definition |
 
 ### Required input columns
 
@@ -44,8 +44,8 @@ For each upstream, list the columns this model depends on. Helps with impact ana
 
 | Upstream | Columns used |
 |---|---|
-| `base__patients` | `id`, `date_of_birth`, `sex`, `deleted_at` |
-| `coh__<name>` | `patient_id`, `cohort_definition_id`, `entry_date`, `exit_date` |
+| `can__person` | `person_id`, `birth_date`, `gender_concept_id` |
+| `der__cohort_<name>` | `subject_id`, `cohort_id`, `cohort_start_date`, `cohort_end_date` |
 
 ### Freshness expectations
 
@@ -80,10 +80,10 @@ Each criterion implements one or more BL clauses and is realised as a dbt test o
 ## Lineage
 
 ```
-upstream                             this model                downstream
-base__patients   ──┐
-coh__<name>      ──┼──►   ds__<name>_encounters   ──►   <name>_line_list (report)
-                                                    └►   Tupaia: <dashboard_name>
+upstream                              this model                  downstream
+can__person       ──┐
+der__cohort_<name> ──┼──►  ds__<name>_encounters   ──►  <name>_line_list (report)
+                                                         └►  Tupaia: <dashboard_name>
 ```
 
 ## Open questions
@@ -99,6 +99,7 @@ _Mode A (retrospective specs) only. Each divergence is follow-up work to bring c
 | ID | Divergence | Resolution |
 |---|---|---|
 | DV-001 | _e.g. current `int__<name>_pivot` does not exclude test patients_ | _Add `test_patient_id is null` filter_ |
+| DV-002 | _e.g. existing model uses legacy `coh__<name>` prefix_ | _Rename to `der__cohort_<name>` next time the model is touched (D2 in-flight)_ |
 
 ## Change log
 

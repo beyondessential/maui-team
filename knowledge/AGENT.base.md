@@ -19,14 +19,22 @@ This file is imported by all Maui repositories via the `.maui/` submodule. It pr
 
    Repos that use dbt (`data-lake`, `data-staging`, `tamanu-source-dbt`, `tamanu-dbt-*`) should also import:
    ```
-   @./.maui/knowledge/standards/metadata.md
-   @./.maui/knowledge/standards/agent-patterns.md
+   @./.maui/knowledge/standards/dbt-metadata.md
+   @./.maui/knowledge/standards/parallel-agents.md
    ```
 
    Repos that model program registries as cohorts (`tamanu-dbt-*` with program registry data) should also import:
    ```
-   @./.maui/knowledge/standards/cohort-conventions.md
+   @./.maui/knowledge/standards/derived-elements-conventions.md
    ```
+
+   Repos that consume or contribute to the canonical clinical model (`tamanu-source-dbt`, `tamanu-dbt-*`, `data-staging`, `data-lake`) should also import architectural context so agents ground decisions in the team's data architecture, not just the conventions that flow from it:
+   ```
+   @./.maui/knowledge/architecture/data-architecture.md
+   ```
+   Architecture docs at `review` status are imported as **non-binding context** — agents should treat them as the team's working direction, not yet as rules. Conventions in `standards/` carry the operative rules; the architecture explains the rationale and direction. Status `draft` docs are not imported by anyone; status `approved` docs are imported as rules in the same way as standards.
+
+   See [`knowledge/README.md`](README.md) for what each directory contains.
 
 3. Create a local AI context file (add to `.gitignore` — it is not committed) that points to `AGENT.md`. The filename depends on the tool:
    - **Claude Code**: `CLAUDE.md` containing `@./AGENT.md`
@@ -42,7 +50,7 @@ This file is imported by all Maui repositories via the `.maui/` submodule. It pr
 Maui is a data engineering team building and maintaining data pipelines and analytics infrastructure for Tamanu (electronic health records) and Tupaia (data visualisation platform). The stack is primarily Python, Dagster, and dbt.
 
 Repositories:
-- `data-lake` — Dagster orchestration; Tamanu analytics; other pipelines (FluTracking, NIWA)
+- `data-lake` — Dagster orchestration; Tamanu analytics; other pipelines (FluTracking, NIWA). Rename to `bes-data-pipelines` is in flight but pending dependency updates, so the repo and references are still `data-lake` for now
 - `data-staging` — Standard Tupaia reporting models for Tamanu data (merging into `tamanu-source-dbt`)
 - `tamanu-source-dbt` — Mono-repo for Tamanu and Tupaia reporting; source of base models for `data-staging`
 - `tamanu-dbt-*` — Deployment-specific Tamanu dbt models

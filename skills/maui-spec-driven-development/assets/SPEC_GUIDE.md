@@ -71,7 +71,7 @@ Each spec lists numbered acceptance criteria that map to BL clauses. Each AC is 
 
 ## Authoring a spec
 
-1. Pick the right template from `maui-team/knowledge/specs/templates/`.
+1. Pick the right template from this skill's `assets/templates/` directory (distributed via the `.maui` submodule).
 2. Copy it into your repo: `<your-repo>/specs/<artefact-type>/<spec-name>.md`.
 3. Fill in the identity block, then work top-down.
 4. Mark unknowns as `[TBD: <question>]` rather than guessing. Promote each TBD to an `OQ-XXX` before review.
