@@ -1,81 +1,49 @@
 # Linear Conventions
 
-How the Maui team uses Linear for issue tracking. Brief; extend in repo `AGENT.md` if
-a repo has project-specific Linear conventions.
-
-## Workspace and team
+How the Maui team uses Linear. Extend in repo `AGENT.md` for project-specific
+conventions.
 
 - **Workspace:** `beyondessential`
-- **Team prefix:** `MAUI`
-- **Project key in URLs:** `MAUI-NNN` (e.g. `MAUI-1234`)
+- **Team prefix:** `MAUI` (issue IDs: `MAUI-NNN`)
 
-Issue IDs are referenced as `MAUI-NNN` in spec identity blocks, PR titles, and
-branch names.
+Reference `MAUI-NNN` in spec identity blocks, PR titles, and branch names.
 
-## Issue lifecycle
+## Lifecycle
 
-Use the workflow Linear ships with; the team conventions sit on top:
+Triage → Backlog → Todo → In Progress → In Review → Done / Cancelled. Don't
+leave issues stuck in **In Review** after the PR merges.
 
-- **Triage** — new issues land here from intake (Slack, partner, on-call)
-- **Backlog** — accepted but not yet scheduled
-- **Todo** — scheduled, ready to pick up
-- **In Progress** — actively being worked on
-- **In Review** — PR open, awaiting review
-- **Done** — merged and verified
-- **Cancelled** — won't fix
+## Required fields
 
-Move issues forward as work progresses. Don't leave issues stuck in **In Review**
-after the PR merges — close them or mark **Done**.
+- **Title** — concrete, verb-led
+- **Description** — context, requirements, links; spec path once the spec exists
+- **Assignee** — once out of Triage
+- **Labels** — at least one of `data`, `tamanu`, `tupaia`, `infra`, `docs`, `migration`
+- **Project** — Maui project for team work; blank for ad-hoc partner requests
 
-## Required fields when opening an issue
+Estimates and cycles are optional and lead-managed.
 
-- **Title** — concrete and verb-led ("Add `der__cohort_diabetes` to tamanu-dbt-fj",
-  not "diabetes cohort")
-- **Description** — context, requirements, links. If the issue warrants a spec,
-  note "spec to follow at `<repo>/specs/<artefact-type>/<spec-name>.md`" once the
-  spec exists.
-- **Assignee** — required once the issue moves out of **Triage**
-- **Labels** — at least one of `data`, `tamanu`, `tupaia`, `infra`, `docs`,
-  `migration` (extend as needed)
-- **Project** — link to the Maui project if it's team work; leave blank for ad-hoc
-  partner requests
+## Linking to PRs and specs
 
-Estimates and cycle assignment are optional; the data lead manages them at the
-project level.
+- **PR title:** `feat(reports): add diabetes line-list report (MAUI-1234)`
+- **Branch:** `feat/maui-1234-diabetes-line-list`
+- **Spec identity block:** populate the Linear issue field with the URL
+- **PR body:** Linear auto-links from `MAUI-NNN` mentions
 
-## Linking issues to PRs and specs
+When a spec is created, paste its path back into the Linear description.
 
-- **PR title** — include the Linear ID at the end:
-  `feat(reports): add diabetes line-list report (MAUI-1234)`
-- **PR body** — Linear auto-links from `MAUI-NNN` mentions; no manual URL needed
-- **Branch name** — include the Linear ID in `kebab-case`:
-  `feat/maui-1234-diabetes-line-list`
-- **Spec identity block** — every spec template has a **Linear issue** field;
-  populate it with the issue's URL
+## What gets an issue
 
-When a spec gets created, paste the spec path back into the Linear issue's
-description so reviewers can navigate from issue → spec → code in one step.
+Yes: new models / pipelines / extracts / migrations / dashboards, bug fixes worth
+tracking, Phase 0 deliverables, externally-requested work.
 
-## Triage rotation
+No: speculative ideas, doc typo fixes (just open a PR), single-thread chats.
 
-The data lead runs triage weekly. Untriaged issues older than five working days are
-escalated.
+## Triage
 
-## What gets a Linear issue
-
-- New models, pipelines, extracts, migrations, dashboards
-- Bug fixes that warrant tracking (not trivial typo fixes)
-- Architecture decisions and Phase 0 deliverables (each deliverable in
-  [`../architecture/data-architecture.md`](../architecture/data-architecture.md)
-  § Phase 0 should have a Linear issue)
-- Externally-requested work (from partners, country focal points, programme leads)
-
-Don't open Linear issues for:
-- Speculative ideas with no clear owner
-- Minor documentation typo fixes (just open a PR)
-- Conversations that resolve themselves in a single team-channel thread
+Data lead runs weekly. Untriaged > 5 working days escalates.
 
 ## See also
 
-- [`git-conventions.md`](git-conventions.md) — branch naming and commit messages
-- [`sdd-conventions.md`](sdd-conventions.md) — when an issue warrants a spec
+- [`git-conventions.md`](git-conventions.md)
+- [`sdd-conventions.md`](sdd-conventions.md)

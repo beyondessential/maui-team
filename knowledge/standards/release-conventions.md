@@ -1,64 +1,40 @@
 # Release Conventions
 
-How Maui repositories cut releases and how downstream consumers track versions.
-For branch naming, see [`git-conventions.md`](git-conventions.md).
+How Maui repos cut releases. Branch rules: [`git-conventions.md`](git-conventions.md).
 
 ## Versioning
 
-Maui repositories follow semantic versioning aligned with the Tamanu release the
-artefact targets:
+Semver `<major>.<minor>.<patch>`.
 
-```
-<major>.<minor>.<patch>
-```
-
-- **`tamanu-source-dbt`** — versions track upstream Tamanu releases. Major and
-  minor follow Tamanu's major/minor; patch tracks BES-side patches against that
-  Tamanu version.
-- **`tamanu-dbt-<deployment>`** — same convention, optionally with a deployment
-  suffix in the tag (e.g. `2.49.3-fj`) when the deployment carries divergent fixes.
-- **`data-lake`** (rename to `bes-data-pipelines` in flight) — independent semver
-  since it's not bound to a Tamanu release.
-- **`fsm-data-migration`** — date-based or milestone-based per the migration plan;
-  semver not required.
+- **`tamanu-source-dbt`** — tracks upstream Tamanu major/minor; patch is BES-side
+- **`tamanu-dbt-<deployment>`** — same, optional `-<deployment>` suffix when
+  deployment carries divergent fixes (`2.49.3-fj`)
+- **`data-lake`** (→ `bes-data-pipelines`) — independent semver
+- **`fsm-data-migration`** — date- or milestone-based; semver not required
 
 ## Version branches
 
-Long-running version branches are named `<major>.<minor>` (`2.49`, `2.48`). See
-[`git-conventions.md`](git-conventions.md) § Version branches for the branching
-rules.
-
-`main` always carries the latest in-development version. Backports to older
-version branches go via cherry-pick or a separate PR targeting the branch.
+`<major>.<minor>` (`2.49`, `2.48`). `main` carries the latest in-development
+version. Backport via cherry-pick or a separate PR. Rules:
+[`git-conventions.md`](git-conventions.md).
 
 ## Cutting a release
 
-1. **Confirm CI is green** on the branch you're releasing from. `dbt-tests`,
-   `claude-code-review`, `python-ci` — whichever apply to the repo.
-2. **Update `pyproject.toml` / `dbt_project.yml` / `packages.yml`** to the new
-   version. For dbt projects, ensure `packages.yml` pins the matching
-   `tamanu-source-dbt` version (or matching internal package versions).
-3. **Update the changelog** — add an entry under the new version in `CHANGELOG.md`
-   (or the repo's equivalent). See § Release notes below.
-4. **Open a release PR** with title `chore(release): vX.Y.Z`. Body should include
-   the changelog excerpt for this release.
-5. **Merge** once reviewed.
-6. **Tag and publish** via GitHub Releases:
-   - Tag: `vX.Y.Z` (lowercase `v` prefix)
-   - Target: the release commit on `main` or the version branch
-   - Title: `vX.Y.Z`
-   - Body: the changelog excerpt
-   - Publish — this triggers `publish-artifacts.yml` for dbt repos
+1. CI green (`dbt-tests`, `claude-code-review`, `python-ci` — whichever apply)
+2. Bump version in `pyproject.toml` / `dbt_project.yml` / `packages.yml`. dbt
+   projects: pin matching `tamanu-source-dbt` version
+3. Add changelog entry (see below)
+4. Open release PR: `chore(release): vX.Y.Z`; body = changelog excerpt
+5. Merge after review
+6. GitHub Release: tag `vX.Y.Z`, target the release commit, body = changelog
+   excerpt. Publish — triggers `publish-artifacts.yml` for dbt repos
 
-The `publish-artifacts.yml` workflow (see
-[`../../.github/workflows/README.md`](../../.github/workflows/README.md)) handles
-S3 upload and meta-server registration automatically; do not manually upload
-compiled bundles.
+`publish-artifacts.yml` handles S3 + meta-server. Never manually upload bundles.
 
 ## Release notes
 
-Release notes live in `CHANGELOG.md` at each repo's root, following the
-[Keep a Changelog](https://keepachangelog.com/) shape:
+`CHANGELOG.md` at each repo's root,
+[Keep a Changelog](https://keepachangelog.com/) format:
 
 ```markdown
 ## [2.49.3] — 2026-06-12
@@ -67,48 +43,40 @@ Release notes live in `CHANGELOG.md` at each repo's root, following the
 - `der__cohort_diabetes` for fj deployment (MAUI-1234)
 
 ### Changed
-- Updated `metric__hypertension_controlled` to use the new threshold (MAUI-1240)
+- Updated `metric__hypertension_controlled` threshold (MAUI-1240)
 
 ### Fixed
-- Fixed timezone bug in `encounter_summary_line_list` (MAUI-1247)
+- Timezone bug in `encounter_summary_line_list` (MAUI-1247)
 
 ### Deprecated
-- `coh__ncd` — use `der__cohort_ncd` instead. Remove in 2.50.x
+- `dim_patient_summary` — use `ds__patient_summary`. Remove in 2.50.x
 ```
 
-Sections: **Added**, **Changed**, **Fixed**, **Deprecated**, **Removed**,
-**Security**. Use the ones that apply; omit empty sections.
+Sections: Added / Changed / Fixed / Deprecated / Removed / Security. Use what
+applies. Every entry references its Linear issue.
 
-Each entry should reference the Linear issue that drove the change.
+## What goes where
 
-## What goes in a release
+- **Patch** — bug fixes, doc updates, no schema changes for consumers
+- **Minor** — additive schema changes; consumers can adopt or ignore
+- **Major** — bound to a Tamanu major; may carry breaking changes
 
-- **Patch (`X.Y.Z+1`)** — bug fixes, minor improvements, doc updates, no schema
-  changes downstream consumers need to plan for
-- **Minor (`X.Y+1.0`)** — additive schema changes, new models, new metrics, new
-  reports; downstream consumers can adopt or ignore
-- **Major (`X+1.0.0`)** — bound to a Tamanu major release; may carry breaking
-  schema changes. Downstream consumers must plan migration
+`Deprecated` flags removal one minor version ahead. Never remove without a
+deprecation cycle.
 
-`Deprecated` entries should signal removal a full minor version ahead — never
-remove without a deprecation cycle.
+## Cross-repo coordination
 
-## Coordinating across repos
+When `tamanu-source-dbt` affects deployment repos:
 
-When a `tamanu-source-dbt` release affects deployment repos:
+1. Cut `tamanu-source-dbt` release first
+2. PR each `tamanu-dbt-<deployment>` to bump pinned version
+3. Tag deployment releases after PRs merge
+4. Post rollout plan + dates in the team channel
 
-1. Cut the `tamanu-source-dbt` release first
-2. Open coordinating PRs in each affected `tamanu-dbt-<deployment>` updating the
-   pinned `tamanu-source-dbt` version in `packages.yml`
-3. Tag deployment releases once all the deployment PRs are merged
-4. Notify the team channel with the rollout plan and dates
-
-For breaking changes, give deployment repos at least one minor-version lead time
-before requiring the update.
+Breaking changes: at least one minor-version lead time before requiring update.
 
 ## See also
 
-- [`git-conventions.md`](git-conventions.md) — version branches, backporting
-- [`linear-conventions.md`](linear-conventions.md) — issue references
-- [`../../.github/workflows/README.md`](../../.github/workflows/README.md) —
-  `publish-artifacts.yml` details
+- [`git-conventions.md`](git-conventions.md)
+- [`linear-conventions.md`](linear-conventions.md)
+- [`../../.github/workflows/README.md`](../../.github/workflows/README.md)

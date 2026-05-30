@@ -52,7 +52,7 @@ Maui is a data engineering team building and maintaining data pipelines and anal
 Repositories:
 - `data-lake` — Dagster orchestration; Tamanu analytics; other pipelines (FluTracking, NIWA). Rename to `bes-data-pipelines` is in flight but pending dependency updates, so the repo and references are still `data-lake` for now
 - `data-staging` — Standard Tupaia reporting models for Tamanu data (merging into `tamanu-source-dbt`)
-- `tamanu-source-dbt` — Mono-repo for Tamanu and Tupaia reporting; source of base models for `data-staging`
+- `tamanu-source-dbt` — Mono-repo for Tamanu and Tupaia reporting; absorbing `data-staging` (the merge is in flight)
 - `tamanu-dbt-*` — Deployment-specific Tamanu dbt models
 - `fsm-data-migration` — Migration from FSM EHR to Tamanu
 - `datatools` — CLI commands for data tasks in Tamanu/Tupaia
@@ -76,6 +76,15 @@ Summary:
 - Commit messages: imperative mood, conventional commit format
 - PRs: clear description, testing notes, request review before merging
 - Main branch is protected; never commit directly to `main`
+
+## Opening PRs
+
+When composing a PR body (via `gh pr create --body`, the API, or any other
+flow that supplies a body), follow the structure in the repo's
+`.github/pull_request_template.md` (Summary, Linear / spec, Test plan,
+Risk / rollback, Checklist). The template only auto-populates when no body
+is supplied; agents that write their own body bypass it unless explicitly
+told to follow it.
 
 ---
 

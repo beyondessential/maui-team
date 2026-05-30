@@ -1,6 +1,6 @@
 {
   // Maui team markdown lint config. Reasonably lax — we use plenty of inline code
-  // for layer prefixes (`coh__`, `der__cohort_<program>`) and prefer flexibility
+  // for layer prefixes (`der__cohort_<program>`, `metric__<id>`) and prefer flexibility
   // over rigid line length. See https://github.com/DavidAnson/markdownlint for
   // rule docs.
   "default": true,

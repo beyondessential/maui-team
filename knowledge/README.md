@@ -45,8 +45,6 @@ Match the question to the directory:
 
 ### [`runbooks/`](runbooks/)
 
-- [`onboarding-checklist.md`](runbooks/onboarding-checklist.md) — first-week setup for new team members
-- [`environment-and-credentials.md`](runbooks/environment-and-credentials.md) — how to obtain credentials for Maui repos
 - [`tamanu-dbt-setup.md`](runbooks/tamanu-dbt-setup.md) — set up a `tamanu-dbt-<deployment>` project
 - [`new-report.md`](runbooks/new-report.md) — add a new Tamanu report (with production-bundle context)
 - [`new-derived-element.md`](runbooks/new-derived-element.md) — add a new derived element (cohort initially; eras/episodes follow)

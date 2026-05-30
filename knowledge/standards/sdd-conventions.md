@@ -1,190 +1,102 @@
-# Spec-Driven Development (SDD) Conventions
+# SDD Conventions
 
-How the Maui team uses spec-driven development for data work. This file is the
-canonical reference for the conventions; the `maui-spec-driven-development` skill
-(distributed via `.maui/skills/`) is the authoring tool that produces specs
-following these conventions.
+Canonical reference for Maui's spec-driven development. The
+`maui-spec-driven-development` skill (`.maui/skills/`) is the authoring tool.
 
-## When to write a spec
+## When to spec
 
-Spec anything that warrants design effort and would benefit from a written contract
-between author, reviewer, and future maintainer:
+Spec: new `ref__` / `lkp__` / `can__` / `der__` / `metric__` / `ds__` models,
+Tamanu reports with non-trivial logic, Dagster pipelines, data extracts,
+migrations, Tupaia dashboards.
 
-- New `ref__`, `lkp__`, `can__`, `der__`, `metric__`, or `ds__` models
-- New Tamanu reports involving non-trivial business logic
-- New Dagster pipelines
-- Data extracts (one-off and recurring)
-- Data migrations
-- New Tupaia dashboards and map overlays
+Skip: trivial fixes, hotfixes, throwaway exploration.
 
-**Do not** write specs for:
-- Trivial bug fixes
-- Hotfixes (time-to-fix outweighs spec value)
-- Throwaway exploration (notebooks, scratch SQL)
-- One-off ad-hoc queries
+Test: would a teammate in six months know *why* the code does what it does? If
+yes, no spec. If no, spec it.
 
-The test: would a teammate reading the code in six months know *why* it does what it
-does? If yes, no spec. If no, write a spec.
-
-## Where specs live
+## Locations
 
 | Artefact | Location |
 |---|---|
-| Spec templates | `.maui/skills/maui-spec-driven-development/assets/templates/` |
-| The authoring guide | `.maui/skills/maui-spec-driven-development/assets/SPEC_GUIDE.md` |
+| Templates | `.maui/skills/maui-spec-driven-development/assets/templates/` |
+| Authoring guide | `.maui/skills/maui-spec-driven-development/assets/SPEC_GUIDE.md` |
 | Populated specs | `<repo>/specs/<artefact-type>/<spec-name>.md` |
-
-Templates and the guide are distributed via the `.maui` submodule. Populated specs
-live in the consuming repo, alongside the code they describe.
 
 ## Lifecycle
 
-| Status | Means |
-|---|---|
-| `draft` | Author is writing; not yet ready for feedback |
-| `review` | Open for team feedback |
-| `approved` | Team has signed off; implementation can start |
-| `implemented` | Code matches spec; all acceptance criteria pass |
-| `deprecated` | Spec retired; kept for history |
+`draft` → `review` → `approved` → `implemented` → `deprecated`. Bump the
+identity-block status as work progresses. Convention, not enforced.
 
-Status is a team convention, not a tool enforcement. Bump the status line in the
-spec's identity block as it progresses. A future PR check may gate merge on spec
-status; not in place yet.
-
-## ID conventions
-
-Every distinct rule, criterion, question, or divergence in a spec has a numbered ID
-with a prefix:
+## ID prefixes
 
 | Prefix | Use |
 |---|---|
 | `BL-NNN` | Business logic clause |
-| `AC-NNN` | Acceptance criterion (a testable check) |
-| `OQ-NNN` | Open question (with owner + due date) |
-| `DV-NNN` | Divergence between current code and ideal spec (retrospective specs only) |
-| `DQ-NNN` | Data quality check (migration specs) |
+| `AC-NNN` | Acceptance criterion (testable) |
+| `OQ-NNN` | Open question (owner + due) |
+| `DV-NNN` | Divergence from ideal (Mode A only) |
+| `DQ-NNN` | Data quality check (migrations) |
 
-Number from 001 within each prefix per spec. **Never reuse IDs.** If a clause is
-deleted, renumber later clauses only if the spec is still in `draft`; in
-`review` / `approved` / `implemented`, retire the ID and don't reuse it.
+Number from 001 per prefix per spec. Never reuse IDs. Renumber only in `draft`.
 
-## Spec anchoring — the code → spec pointer
+## Spec anchoring
 
-Implementing code references the BL/DQ ID in a comment:
+Code references the BL/DQ ID; tests do too:
 
 ```sql
--- BL-001: Exclude soft-deleted records (see specs/dbt-model/patients_dataset.md)
+-- BL-001: Exclude soft-deleted records
 where deleted_at is null
 ```
 
-```python
-# BL-003: Skip rows where patient consent was withdrawn
-df = df[df['consent_withdrawn'].isna()]
-```
-
-Tests reference the same IDs:
-
 ```yaml
 - name: ac_001_no_soft_deleted   # asserts BL-001
-  test: <generic or singular test>
 ```
 
-A reader can grep one ID and find: spec clause, implementing code, asserting test.
+Grep one ID → spec clause, code, test.
 
-**The pointer is one-way: code → spec.** Specs do **not** cite code by file path
-and line number. Line numbers rot on every unrelated edit; the rot is silent (no
-static check catches it). If a spec rule needs to reference code at all, use a
-symbol name (e.g. `run_postgres_copy_import`) — stable across line moves and still
-grep-navigable.
+**One-way pointer (code → spec).** Specs never cite code by file/line — line
+numbers rot silently. Use a symbol name if a code reference is genuinely needed;
+otherwise let the `BL-NNN` comment carry the navigation.
 
-In practice, a tight BL clause rarely needs a code reference: the spec describes
-behaviour, the code implements it, and the `BL-NNN` comment provides navigation.
+## Reviewer checklist
 
-## Authoring a spec
+- Purpose clear, grounded in a concrete need?
+- Inputs/outputs at the right level?
+- Each BL atomic, testable, unambiguous?
+- Each AC maps to a runnable test?
+- Open questions captured (not buried)?
+- Mode A: divergences listed as `DV-XXX`, spec not edited to match buggy code?
 
-1. Pick the artefact type and copy the template from
-   `.maui/skills/maui-spec-driven-development/assets/templates/` to
-   `<repo>/specs/<artefact-type>/<spec-name>.md`
-2. Fill in the identity block (Name, Type, Status, Owner, Linear issue, Created,
-   Last updated, …)
-3. Work top to bottom. Mark unknowns as `[TBD: <question>]` rather than guessing
-4. Number every distinct rule as `BL-001`, `BL-002`… from the start — do not
-   renumber later
-5. Promote each `[TBD]` to an `OQ-XXX` row with owner + due date before moving the
-   spec from `draft` to `review`
-6. Open a PR with status `draft` or `review`
+## Tightening BL / DQ clauses
 
-## Reviewing a spec
-
-Reviewer checklist:
-
-- Is the purpose clear and grounded in a concrete user need?
-- Are inputs and outputs specified at the right level of detail?
-- Is each `BL` clause atomic, testable, and unambiguous?
-- Does each `AC` map to an implementable test?
-- Are open questions captured rather than glossed over?
-- For retrospective specs (Mode A): are divergences from the ideal explicitly
-  listed as `DV-XXX` items rather than the spec being edited to match buggy code?
-
-## Tightening clauses
-
-A `BL` / `DQ` clause should compress to one declarative sentence. If a clause runs
-to three or more sentences, cut these patterns:
-
-- **Embedded rationale** ("because X, so Y") — move to `DV` or Change log
-- **Duplicated cross-references** — one link is enough
-- **Restated invariants** — anchor in one clause; the other refers back
-- **Multi-clause parentheticals** — split or drop
-- **Code-line hand-holding** — drop entirely
-
-A 40% length reduction with no normative loss is normal on a first pass.
+One declarative sentence. Cut: embedded rationale, duplicated cross-refs,
+restated invariants, multi-clause parentheticals, code-line hand-holding.
+40% length reduction with no normative loss is normal on a first pass.
 
 ## Before merging
 
-Specs accrete on a feature branch (multiple change-log entries, `DV-XXX` items that
-get resolved mid-branch, `OQ-XXX` items that get answered before approval). Before
-merging to the trunk, **collapse the resolved entries rather than mark them
-resolved**:
+Collapse, don't annotate. Resolved `DV-XXX` / `OQ-XXX` items → **delete the row**.
+Multiple change-log entries → squash to one at merge time. The trunk spec is a
+contract, not a history book.
 
-- `DV-XXX` items resolved on this branch → **delete the row**, not strike-through.
-  From the trunk's perspective the divergence never existed
-- `OQ-XXX` items closed on this branch → same treatment. Delete the row
-- Multiple change-log entries from the branch → squash into one entry dated at
-  merge time
-- Identity-block `Created` / `Last updated` dates → align with the merge date if
-  the spec is landing as one record
+## Mode A (retrospective specs)
 
-Principle: the trunk's spec is a contract, not a history book. Commit history
-captures *how we got here*; the spec captures *what we agreed to*.
+Spec the *ideal* state. Capture every divergence as `DV-XXX`. Never edit the spec
+to match buggy code.
 
-## Retrospective specs (Mode A)
+## Review hooks
 
-When documenting existing code:
-- Write the spec to describe the *ideal* state
-- Where current code diverges, capture each divergence as a `DV-XXX` work item
-- Each divergence becomes follow-up work to bring code into spec
-- **Never edit the spec to match buggy code.**
+| Issue | Severity |
+|---|---|
+| New non-trivial logic missing `BL-XXX` anchors when a spec exists | 🟡 Suggestion |
+| `BL-XXX` reference doesn't match any spec clause | 🟡 Suggestion |
+| New model/pipeline/extract with no spec | 🟡 Suggestion |
+| Code contradicts a spec clause it references | 🔴 Blocker |
 
-## Code review hooks
-
-Reviewers flag PRs that:
-
-- Introduce new non-trivial logic without `BL-XXX` spec-anchor comments when a spec
-  exists for that area — **🟡 Suggestion**
-- Carry `BL-XXX` references that don't match any clause in the corresponding spec
-  — **🟡 Suggestion**
-- Introduce a new model, pipeline, or extract without an accompanying spec —
-  **🟡 Suggestion** (suggest creating one)
-- Directly contradict a spec clause they reference (e.g. `-- BL-003: Exclude
-  deleted` but the `where` clause does the opposite) — **🔴 Blocker**
-
-See [`../../REVIEW.md`](../../REVIEW.md) § Spec-driven development for the review
-rubric.
+Full rubric: [`../../REVIEW.md`](../../REVIEW.md) § Spec-driven development.
 
 ## See also
 
-- [`linear-conventions.md`](linear-conventions.md) — issue references in spec
-  identity blocks
-- [`git-conventions.md`](git-conventions.md) — branch naming for spec PRs
-- The `maui-spec-driven-development` skill's `SPEC_GUIDE.md` for authoring details
-- The skill's `references/sdd-principles.md` for background on SDD theory
+- [`linear-conventions.md`](linear-conventions.md) — issue refs in identity blocks
+- The skill's `SPEC_GUIDE.md` — authoring details
+- The skill's `references/sdd-principles.md` — background

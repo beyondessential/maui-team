@@ -18,7 +18,7 @@ This repo provides shared AI assistant knowledge and reusable GHA workflows for 
   - [`glossary.md`](knowledge/glossary.md) — terminology reference
   - [`architecture/`](knowledge/architecture/) — strategic/architectural docs (north star, decisions, phase 0, open questions)
   - [`standards/`](knowledge/standards/) — coding and tooling conventions (dbt, dbt-metadata, sql, python, dagster, testing, git, linear, release, sdd, tamanu-dbt, derived-elements, parallel-agents)
-  - [`runbooks/`](knowledge/runbooks/) — step-by-step operational guides (onboarding, env + credentials, dbt setup, new-report, new-derived-element, macro-change, refactoring)
+  - [`runbooks/`](knowledge/runbooks/) — step-by-step operational guides (dbt setup, new-report, new-derived-element, macro-change, refactoring)
 
 ## Contributing
 
@@ -42,6 +42,15 @@ Add a `.yml` file to `.github/workflows/` with `on: workflow_call`. Document inp
 
 ### Editing a skill
 Skills live in [`skills/`](skills/) and are distributed to consumer repos via the `.maui/` submodule. Consumer repos symlink `.claude/skills` → `.maui/skills`.
+
+## Opening PRs
+
+When composing a PR body (via `gh pr create --body`, the API, or any other
+flow that supplies a body), follow the structure in
+[`.github/pull_request_template.md`](.github/pull_request_template.md):
+Summary, Linear / spec, Test plan, Risk / rollback, Checklist. The template
+only auto-populates when no body is supplied; an agent that writes its own
+body bypasses it unless explicitly told to follow it.
 
 ## CI
 

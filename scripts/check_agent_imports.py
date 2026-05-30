@@ -21,13 +21,13 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
-# Files that may contain `@./.maui/...` example import lines. Add more as new
-# files appear that document the import pattern.
-FILES_TO_CHECK = [
+# Locations that may contain `@./.maui/...` example import lines. Globs let new
+# runbooks pick up coverage without editing this script.
+FILES_TO_CHECK: list[Path] = [
     REPO_ROOT / "README.md",
     REPO_ROOT / "knowledge" / "AGENT.base.md",
-    REPO_ROOT / "knowledge" / "runbooks" / "tamanu-dbt-setup.md",
-    REPO_ROOT / "knowledge" / "runbooks" / "onboarding-checklist.md",
+    *sorted((REPO_ROOT / "knowledge" / "runbooks").glob("*.md")),
+    *sorted((REPO_ROOT / "knowledge" / "standards").glob("*.md")),
 ]
 
 # Match lines like:

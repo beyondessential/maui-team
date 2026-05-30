@@ -11,9 +11,7 @@ Linear; this list mirrors them for in-repo visibility.
       `metric__`, `ds__`) and its mapping to OMOP categories (D2); documents the
       environment-aware materialisation pattern (incremental/table on replica,
       view in compiled bundle); documents the `bases/`-only rule for `public.*`
-      access (D10). Tier mapping in
-      [`../../standards/dbt-metadata.md`](../../standards/dbt-metadata.md)
-      extended to the new layers in the same pass.
+      access (D10).
 - [x] **`derived-elements-conventions.md` content updated** *(done — see
       [`../../standards/derived-elements-conventions.md`](../../standards/derived-elements-conventions.md))*.
       Broadened to cover the full `der__` layer (cohorts, eras, episodes),
@@ -25,14 +23,18 @@ Linear; this list mirrors them for in-repo visibility.
       updated to match.
 - [ ] **`new-metric.md` runbook drafted** in
       [`../../runbooks/`](../../runbooks/), mirroring the structure of
-      `new-derived-element.md` and `new-report.md`.
+      `new-derived-element.md` and `new-report.md`. *Until this lands, an
+      agent adding a new `metric__` should follow `new-derived-element.md` as
+      the closest pattern and consult D5 for the registry contract.*
 - [ ] **`metric_definitions.csv` schema agreed** and seeded with 1–2 reference
       indicators (port one existing Tupaia indicator end-to-end as the proof of
       concept, including the paired Tupaia Data Table + External Database
       Connection). A proposed unified schema covering metrics, cohorts, eras,
       and episodes (with a `kind` discriminator) is drafted in
       [`../../standards/derived-elements-conventions.md`](../../standards/derived-elements-conventions.md)
-      § Registry; team agreement and seeding pending.
+      § Registry; team agreement and seeding pending. Resolution of
+      [OQ-004](open-questions.md) (override vs extend semantics for deployment
+      seeds) closes alongside this deliverable.
 - [ ] **One reference `can__` model built** in
       `tamanu-source-dbt/models/canonical/` — `can__person` is the natural pick
       (lowest variance, highest reuse). Establishes the pattern others copy.

@@ -1,66 +1,55 @@
-# Runbook: Adding a New Derived Element
+# Adding a New Derived Element
 
-Builds a program registry cohort in the `der__` derived-elements layer
-(`der__cohort_<program>`). Steps in order; steps marked **[parallel]** can be
-delegated to separate agents running simultaneously.
+Builds a `der__cohort_<program>` model. Currently cohort-only; extend in place
+for eras/episodes when needed. Applies to `tamanu-dbt-*` repos.
 
-This runbook is the procedural guide. The canonical SQL patterns
-(conditions pivot, exit CTE, patient-selection scaffold, measurement windows,
-OMOP-lite columns, registry rules) live in
-[`../standards/derived-elements-conventions.md`](../standards/derived-elements-conventions.md).
-This file points at the right sections rather than duplicating them.
+Canonical patterns live in
+[`../standards/derived-elements-conventions.md`](../standards/derived-elements-conventions.md);
+this runbook is the procedural guide.
 
-Currently covers the cohort case. Eras and episodes follow the same shape;
-extend this runbook in place when you build the first non-cohort derived element.
-
-Applies to `tamanu-dbt-*` repos.
+`[parallel]` steps can be delegated to separate agents.
 
 ---
 
-## Step 0 — Gather deployment-specific configuration
+## Step 0 — Gather config (ask the user first)
 
-**The agent must ask the user these questions before writing any code.**
+1. `program_registry_id` (e.g. `programRegistry-ncdregistry`)
+2. Relevant `program_registry_condition_id`s + local column names
+3. `cohort_start_date` source — see [§ `cohort_start_date`](../standards/derived-elements-conventions.md#cohort_start_date--deployment-specific)
+4. `cohort_end_date` source + priority — see [§ `cohort_end_date`](../standards/derived-elements-conventions.md#cohort_end_date--deployment-specific)
+5. Cohort window (`6m`, `12m`, …)
+6. Measurement types + control thresholds
+7. Available `map__omop_*` seeds (check repo `AGENT.md`)
 
-1. What is the `program_registry_id` for this programme? (e.g.
-   `programRegistry-ncdregistry`)
-2. What condition IDs (`program_registry_condition_id`) are relevant, and what
-   local name should each column use?
-3. **Entry date source** — `cohort_start_date` per the cases in
-   [`derived-elements-conventions.md` § `cohort_start_date`](../standards/derived-elements-conventions.md#cohort_start_date--deployment-specific).
-   Which case applies?
-4. **Exit date source** — `cohort_end_date` per the cases in
-   [`derived-elements-conventions.md` § `cohort_end_date`](../standards/derived-elements-conventions.md#cohort_end_date--deployment-specific).
-   Which case applies (priority order)?
-5. What cohort window is needed? (e.g. 6-month, 12-month)
-6. What measurement types need tracking? (e.g. BP, HbA1c, weight) — list each
-   with its survey form, field IDs, and control thresholds.
-7. Which `map__omop_*` seeds exist in this repo? (check repo `AGENT.md` under
-   "Cohort configuration", or search `seeds/` for `map__omop_` files)
+Document answers under "Cohort configuration" in the repo `AGENT.md`.
 
-Document the answers in the repo's `AGENT.md` under a **"Cohort configuration"**
-section before proceeding. Create the section if it doesn't exist.
+## Step 0a — Register the cohort upstream *(separate PR, in `tamanu-source-dbt`)*
 
-**Register the cohort in the central registry.**
+Cohort registration is a cross-repo step. **Open and merge this PR before
+starting the deployment-side work** — the deployment models reference IDs that
+must exist in the upstream seed.
 
-See [`derived-elements-conventions.md` § Registry](../standards/derived-elements-conventions.md#registry)
-for the current operative state (`cohort_definitions.csv` with integer
-`cohort_definition_id`) and the destination state (unified
-`metric_definitions.csv` with text `cohort_id`). The runbook applies the
-transition rule: open a PR to `tamanu-source-dbt` to add a row to
-`cohort_definitions.csv` *and* pick a text `cohort_id` matching the model suffix
-(e.g. `cohort_ncd` for `der__cohort_ncd`). Both IDs co-exist on the new model
-until consolidation lands.
+1. Open a PR to **`tamanu-source-dbt`** adding a row to
+   `seeds/cohort_definitions.csv`:
+   - Assign the next available integer `cohort_definition_id`
+   - Pick a text `cohort_id` matching the model suffix (`cohort_ncd` for
+     `der__cohort_ncd`). Both IDs co-exist until registry consolidation lands
+2. Wait for the PR to merge and a `tamanu-source-dbt` release to publish (or
+   bump the package ref in the deployment repo's `packages.yml` to a commit
+   that includes the seed row)
+3. Then proceed with Step 1 below in the deployment repo
+
+See [§ Registry](../standards/derived-elements-conventions.md#registry).
 
 ---
 
 ## Prerequisites
 
-- `dbt deps` run; database connection configured
-- Step 0 answers documented in the repo's `AGENT.md`
-- `program_registry_id` and condition IDs verified queryable:
+- `dbt deps` run; DB connection configured
+- Step 0 answers in `AGENT.md`
+- Verify queryability:
   ```sql
   select distinct program_registry_id from patient_program_registrations;
-
   select distinct program_registry_condition_id
   from patient_program_registration_conditions
   where split_part(patient_program_registration_id, ';', 2) = '<programRegistry-id>';
@@ -70,131 +59,81 @@ until consolidation lands.
 
 ## Steps
 
-### 1. Build `der__cohort_<name>_registry` **[can start immediately]**
+### 1. `der__cohort_<name>_registry` `[parallel]`
 
-Create `models/derived/der__cohort_<name>_registry.sql` — env-aware
-materialisation (`view` on the replica is the typical choice; see
-[`dbt-conventions.md` § Environment-aware materialisation](../standards/dbt-conventions.md#environment-aware-materialisation-targetname-switch)).
+`models/derived/der__cohort_<name>_registry.sql` — env-aware (typically `view`
+on replica). Pattern: [§ Registry model](../standards/derived-elements-conventions.md#registry-model--patterns).
+Read upstream via `ref('base__...')` / `ref('can__...')` only — never
+`source()` (D10). Add `.yml`.
 
-Follow the registry-model pattern in
-[`derived-elements-conventions.md` § Registry model](../standards/derived-elements-conventions.md#registry-model-der__cohort_name_registry):
-conditions pivot CTE, exit CTE, registry filter. Read upstream via
-`ref('base__...')` or `ref('can__...')` — never via `source()` (D10).
+### 2. `int__<name>_cohort_<period>_patients` *(after 1)*
 
-Create matching `.yml` — document all columns.
+`models/derived/int__<name>_cohort_<period>_patients.sql` — `ephemeral`.
+Pattern: [§ Patient selection](../standards/derived-elements-conventions.md#patient-selection--pattern).
+Add `.yml`.
 
-### 2. Build cohort patient selection **[after step 1]**
+### 3. Measurement windows `[parallel, after 1]`
 
-Create `models/derived/int__<name>_cohort_<period>_patients.sql` — `ephemeral`.
+One per measurement type at `models/derived/int__<name>_cohort_<period>_<measurement>.sql`
+— `ephemeral`. Pattern:
+[§ Measurement window](../standards/derived-elements-conventions.md#measurement-window--pattern).
+Header comment with window bounds + thresholds. Add `.yml`.
 
-Follow the pattern in
-[`derived-elements-conventions.md` § Cohort patient selection](../standards/derived-elements-conventions.md#cohort-patient-selection-int__name_cohort_period_patients):
-reporting-months scaffold, `CROSS JOIN` to the registry, registration-month
-filter, active-at-evaluation filter.
+### 4. `der__cohort_<name>` *(after 2 and 3)*
 
-Create matching `.yml`.
+`models/derived/der__cohort_<name>.sql` — env-aware. Must include OMOP-lite
+columns: `cohort_id`, `cohort_definition_id`, `subject_id`, `cohort_start_date`,
+`cohort_end_date` (see
+[§ OMOP-lite required columns](../standards/derived-elements-conventions.md#omop-lite-required-columns)).
+Add demographics + concept shadow columns where `map__omop_*` seeds exist.
+`.yml` states both ID values.
 
-### 3. Build measurement window models **[parallel, after step 1]**
+### 5. `der__cohort_<name>_observations` *(after 2 and 3)*
 
-For each measurement type from Step 0, create one ephemeral intermediate at
-`models/derived/int__<name>_cohort_<period>_<measurement>.sql`.
+`models/derived/der__cohort_<name>_observations.sql` — env-aware. Joins the
+patient-selection intermediate to each measurement intermediate; one row per
+patient × yearmonth. Add `.yml` (document thresholds).
 
-Follow the pattern in
-[`derived-elements-conventions.md` § Measurement window models](../standards/derived-elements-conventions.md#measurement-window-models-int__name_cohort_period_measurement):
-filter to the measurement window, apply control thresholds, group by
-`yearmonth, patient_id`.
+### 6. Outputs `[parallel, after 4 and 5]`
 
-Document window bounds and thresholds in a comment at the top of each file.
+**Tamanu line-list report**: report view sourcing
+`{{ ref('der__cohort_<name>') }}`; follow [`new-report.md`](new-report.md).
 
-Create matching `.yml` for each.
+**Tamanu aggregation report**: `view` sourcing `{{ ref('der__cohort_<name>') }}`;
+aggregate + filter in the report, not the cohort model.
 
-### 4. Build `der__cohort_<name>` **[after steps 2 and 3]**
+**Tupaia Data Table**: preferred path is `der__cohort_<name>` *is* the Data
+Table — Tupaia reads it directly. If pre-aggregation needed for performance,
+materialise on `analytics_*` only (out of production bundle).
 
-Create `models/derived/der__cohort_<name>.sql` — env-aware materialisation.
+Never redefine cohort membership downstream — shared-pivot rule
+([§ Shared-pivot](../standards/derived-elements-conventions.md#shared-pivot-rule)).
 
-Must include the OMOP-lite columns per
-[`derived-elements-conventions.md` § OMOP-lite required columns](../standards/derived-elements-conventions.md#omop-lite-required-columns):
-`cohort_id` (text), `cohort_definition_id` (integer), `subject_id`,
-`cohort_start_date`, `cohort_end_date`.
-
-Add demographics and concept shadow columns where applicable (check the repo's
-`AGENT.md` for available `map__omop_*` seeds).
-
-Create matching `.yml` — document all OMOP columns; state both `cohort_id` and
-`cohort_definition_id` values in the model description.
-
-### 5. Build `der__cohort_<name>_observations` **[after steps 2 and 3]**
-
-Create `models/derived/der__cohort_<name>_observations.sql` — env-aware
-materialisation. Join `int__<name>_cohort_<period>_patients` to each measurement
-intermediate; one row per patient per reporting period, linked by `patient_id` +
-`yearmonth`.
-
-Create matching `.yml` — document measurement columns including control
-thresholds.
-
-### 6. Add report and aggregation outputs **[parallel, after steps 4 and 5]**
-
-**Tamanu line-list report** (if needed):
-- Create a report view in `models/reports/` sourcing from
-  `{{ ref('der__cohort_<name>') }}`
-- Follow [`new-report.md`](new-report.md) for translations, timezone macros, and
-  config
-
-**Tamanu aggregation report** (if needed):
-- `view`-materialised model sourcing from `{{ ref('der__cohort_<name>') }}`
-- Aggregate by `yearmonth`, facility, or other dimensions in the report; filter
-  in the report, not in the cohort model
-- Never redefine cohort membership — always source from the `der__` model
-  (shared-pivot rule)
-
-**Tupaia aggregation / Data Table** (if needed):
-- Preferred: the `der__cohort_<name>` model itself is the Tupaia Data Table —
-  Tupaia reads it directly and applies its own filters
-- If a separate pre-aggregated table is needed for performance, materialise on
-  the replica only (`analytics_*` target); keep it out of the production bundle
-- If the aggregation matches a Tamanu aggregation report, extract a shared macro
-
-The shared-pivot rule (never redefine cohort logic) is non-negotiable; see
-[`derived-elements-conventions.md` § Shared-pivot rule](../standards/derived-elements-conventions.md#shared-pivot-rule).
-
----
-
-### 7. Validate **[parallel checks]**
+### 7. Validate `[parallel]`
 
 ```bash
 sqlfluff fix models/derived/
-
 dbt test --profiles-dir config \
   --select der__cohort_<name> der__cohort_<name>_registry der__cohort_<name>_observations
-
 grep -r "cohort_definition_id\|cohort_id" models/derived/*.yml
 ```
 
 ---
 
-## Checklist before opening a PR
+## PR checklist
 
-- [ ] `der__cohort_<name>_registry` created with conditions pivot and exit CTE
-- [ ] `int__<name>_cohort_<period>_patients` created (ephemeral)
-- [ ] One `int__<name>_cohort_<period>_<measurement>` per measurement type
-      (ephemeral)
-- [ ] `der__cohort_<name>` created with all OMOP-lite columns (`cohort_id`,
-      `cohort_definition_id`, `subject_id`, `cohort_start_date`,
-      `cohort_end_date`)
-- [ ] `der__cohort_<name>_observations` created
-- [ ] All models have `.yml` documentation; OMOP columns documented; both
-      `cohort_id` and `cohort_definition_id` values stated in model description
-- [ ] Repo `AGENT.md` updated with cohort configuration (entry/exit date
-      sources, programme ID)
-- [ ] Tamanu report and/or Tupaia Data Table added (if required)
-- [ ] All downstream consumers (`ref()`) source from `der__cohort_<name>` — not
-      from bespoke re-derivations
-- [ ] `cohort_definition_id` registered in
-      `tamanu-source-dbt/seeds/cohort_definitions.csv` and matches exactly
-- [ ] `cohort_id` text value matches the model suffix
-- [ ] No reads from `public.*` outside `bases/` (D10)
-- [ ] `sqlfluff fix` applied
-- [ ] `dbt test` passes
-- [ ] Spec added if the cohort warrants one (see
-      [`../standards/sdd-conventions.md`](../standards/sdd-conventions.md))
+- [ ] `der__cohort_<name>_registry` with conditions pivot + exit CTE
+- [ ] `int__<name>_cohort_<period>_patients` (ephemeral)
+- [ ] One `int__<name>_cohort_<period>_<measurement>` per measurement (ephemeral)
+- [ ] `der__cohort_<name>` with all OMOP-lite columns
+- [ ] `der__cohort_<name>_observations`
+- [ ] All `.yml`s present; both `cohort_id` and `cohort_definition_id` in model
+      descriptions
+- [ ] Repo `AGENT.md` updated with cohort config
+- [ ] Tamanu report and/or Tupaia Data Table if required
+- [ ] All downstream `ref()`s use `der__cohort_<name>` — no re-derivation
+- [ ] `cohort_definition_id` registered in `cohort_definitions.csv`, matches
+- [ ] `cohort_id` matches model suffix
+- [ ] No `public.*` reads outside `bases/` (D10)
+- [ ] `sqlfluff fix` applied; `dbt test` passes
+- [ ] Spec added if warranted ([`sdd-conventions.md`](../standards/sdd-conventions.md))

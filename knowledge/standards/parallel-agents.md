@@ -71,7 +71,8 @@ are structured so either a human or an AI agent can execute them step by step, w
 explicit checkpoints and verification steps.
 
 Available runbooks:
-- `new-report.md` — adding a standard + sensitive report pair
-- `macro-change-impact.md` — assessing and rolling out a macro to existing models
-- `tamanu-dbt-setup.md` — setting up a new deployment repo
+- `new-report.md` — adding a Tamanu report (standard + sensitive in `tamanu-source-dbt`; custom in `tamanu-dbt-*`)
 - `new-derived-element.md` — building a program registry cohort using the OMOP-inspired semantic layer (broader derived-element coverage TBD)
+- `macro-change-impact.md` — assessing and rolling out a macro to existing models
+- `refactoring-guide.md` — phased refactoring playbook across all Maui repos
+- `tamanu-dbt-setup.md` — setting up a new deployment repo

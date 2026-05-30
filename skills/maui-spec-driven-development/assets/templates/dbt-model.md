@@ -6,7 +6,7 @@
 |---|---|
 | **Name** | `<model_name>` (e.g. `der__cohort_nutrition_registry`) |
 | **Type** | dbt model |
-| **Layer** | `[base \| ref \| lkp \| can \| der \| metric \| int \| ds \| report \| fct (legacy) \| dim (legacy) \| coh (legacy)]` |
+| **Layer** | `[base \| ref \| lkp \| surveys \| can \| der \| metric \| int \| ds \| report \| fct (legacy) \| dim (legacy)]` |
 | **Materialisation** | `[view \| table \| incremental \| ephemeral]` |
 | **Status** | `draft` |
 | **Owner** | `@<github_handle>` |
@@ -99,7 +99,6 @@ _Mode A (retrospective specs) only. Each divergence is follow-up work to bring c
 | ID | Divergence | Resolution |
 |---|---|---|
 | DV-001 | _e.g. current `int__<name>_pivot` does not exclude test patients_ | _Add `test_patient_id is null` filter_ |
-| DV-002 | _e.g. existing model uses legacy `coh__<name>` prefix_ | _Rename to `der__cohort_<name>` next time the model is touched (D2 in-flight)_ |
 
 ## Change log
 
