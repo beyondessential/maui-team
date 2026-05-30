@@ -1,0 +1,30 @@
+name: AGENT imports check
+
+# Validates that `@./.maui/<path>` example imports in README and runbooks
+# resolve to real files in this repo. Catches renames that would silently
+# break consumer repos importing the standards.
+
+on:
+  pull_request:
+    paths:
+      - 'README.md'
+      - 'AGENT.md'
+      - 'knowledge/**'
+      - 'scripts/check_agent_imports.py'
+      - '.github/workflows/imports-check.yml'
+  push:
+    branches: [main]
+
+jobs:
+  check-imports:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate example imports resolve
+        run: python scripts/check_agent_imports.py

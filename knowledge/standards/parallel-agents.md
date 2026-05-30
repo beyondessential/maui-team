@@ -1,8 +1,9 @@
-# Agent Patterns
+# Parallel Agents
 
-Guidance for effective agentic workflows in Maui repositories. These patterns apply across
-all dbt, Python, and Dagster repos and are tool-agnostic — follow them whether working with
-Claude Code, Cursor, Codex, or any other AI coding assistant.
+Guidance for using parallel sub-agents and managing context discipline across Maui
+repositories. These patterns apply to all dbt, Python, and Dagster repos and are
+tool-agnostic — follow them whether working with Claude Code, Cursor, Codex, or any
+other AI coding assistant.
 
 ---
 
@@ -70,7 +71,8 @@ are structured so either a human or an AI agent can execute them step by step, w
 explicit checkpoints and verification steps.
 
 Available runbooks:
-- `new-report.md` — adding a standard + sensitive report pair
+- `new-report.md` — adding a Tamanu report (standard + sensitive in `tamanu-source-dbt`; custom in `tamanu-dbt-*`)
+- `new-derived-element.md` — building a program registry cohort using the OMOP-inspired semantic layer (broader derived-element coverage TBD)
 - `macro-change-impact.md` — assessing and rolling out a macro to existing models
+- `refactoring-guide.md` — phased refactoring playbook across all Maui repos
 - `tamanu-dbt-setup.md` — setting up a new deployment repo
-- `new-cohort.md` — building a program registry cohort using the OMOP-inspired semantic layer

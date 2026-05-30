@@ -51,22 +51,23 @@ Default to **Suggestion** when unsure. Reserve **Blocker** for issues that risk 
 
 ## dbt-specific checks
 
-Run before posting inline comments when reviewing a dbt repo:
+Run before posting inline comments when reviewing a dbt repo. Scripts are
+consumer-repo specific — skip any that aren't present in the repo under review.
 
 ```bash
-python scripts/validate_report_configs.py
-python scripts/check_translations.py
+python scripts/validate_report_configs.py   # skip if not present
+python scripts/check_translations.py        # skip if not present
 sqlfluff lint .
 ```
 
-Flag as 🔴 **Blocker** if:
-- A new report exists in `sensitive/` but is missing its `standard/` counterpart (or vice versa)
-- New user-facing column labels are missing from the translations CSV
-
 Flag as 🟡 **Suggestion** if:
+- A new report exists in `sensitive/` but is missing its `standard/` counterpart (or vice versa)
 - A datetime field in a report does not use the project's timezone macro (check repo
   `AGENT.md` for the macro name)
 - `order by` appears in a base or dataset model (only allowed in reports)
+
+Flag as 🔴 **Blocker** if:
+- New user-facing column labels are missing from the translations CSV (renders raw keys to users)
 
 ---
 

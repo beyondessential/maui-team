@@ -1,10 +1,36 @@
 # Tamanu dbt Conventions
 
-Conventions for dbt projects that model data from Tamanu (electronic health records).
+Conventions for dbt projects that model data from Tamanu (electronic health
+records). General dbt conventions live in `dbt-conventions.md`; this file covers
+the Tamanu-specific patterns layered on top.
+
+## Version branches
+
+Maui manages multiple Tamanu deployments running different versions. Long-running
+version branches in Tamanu-bound repositories are named by `<major>.<minor>`:
+
+```
+main      ← latest (e.g. 2.50.x)
+2.49      ← maintained for deployments on 2.49
+2.48      ← maintained for deployments on 2.48
+```
+
+- Cut short-lived work branches from the relevant version branch when targeting
+  a specific deployed version; cut from `main` for forward-only work
+- Backport fixes to older version branches via cherry-pick or a separate PR
+  against the version branch
+- See `release-conventions.md` for how version branches map to release tags and
+  `git-conventions.md` for the general branching rules
 
 ## `data_staging` package
 
 External package at `dbt_packages/data_staging/` — not editable in consuming repos. Changes require a new package release in `beyondessential/data-staging`.
+
+> **Merger note.** The `data-staging` package is in the process of being merged into
+> `tamanu-source-dbt` (see `../AGENT.base.md` repo list). Until the merge lands, treat
+> `data_staging` as the canonical home for shared base/staging models; after the merge,
+> equivalent models live under `tamanu-source-dbt/models/` and the package import goes
+> away. Standards in this file describe the pre-merge layout.
 
 ## Source naming
 

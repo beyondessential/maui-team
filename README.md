@@ -8,15 +8,27 @@ Central repository for shared AI assistant knowledge and reusable GitHub Actions
 maui-team/
 ├── REVIEW.md                       # Maui team Claude Code review reference
 ├── AGENT.md                        # AI context for this repo
+├── .editorconfig
+├── .markdownlint.jsonc
 ├── .sqlfluff                       # Canonical SQLFluff config (dbt) — symlink from consuming repos
 ├── .sqlfluff-raw                   # Canonical SQLFluff config (raw SQL) — symlink from consuming repos
 ├── ruff.toml                       # Base ruff config — extended by consuming repos
-├── .github/workflows/              # Reusable GHA workflows
+├── .github/
+│   ├── workflows/                  # Reusable GHA workflows + this repo's own CI
+│   ├── pull_request_template.md
+│   └── markdown-link-check-config.json
+├── scripts/                        # Utility scripts (e.g. check_agent_imports.py)
+├── skills/                         # Shared Claude Code skills (formerly .agents/skills/)
 └── knowledge/
+    ├── README.md                   # Index of knowledge/
     ├── AGENT.base.md               # Base AI context imported by all Maui repos
-    ├── runbooks/                   # Step-by-step operational guides
-    └── standards/                  # Coding and tooling conventions
+    ├── glossary.md                 # Terminology reference
+    ├── architecture/               # Strategic / architectural docs (north star, decisions, phase 0, OQs)
+    ├── standards/                  # Coding and tooling conventions
+    └── runbooks/                   # Step-by-step operational guides
 ```
+
+See [`knowledge/README.md`](knowledge/README.md) for the full per-file index.
 
 ## After cloning an existing repo
 
@@ -46,8 +58,8 @@ git submodule add https://github.com/beyondessential/maui-team .maui
 @./.maui/knowledge/AGENT.base.md
 @./.maui/knowledge/standards/git-conventions.md
 @./.maui/knowledge/standards/dbt-conventions.md
-@./.maui/knowledge/standards/metadata.md
-@./.maui/knowledge/standards/tamanu-conventions.md
+@./.maui/knowledge/standards/dbt-metadata.md
+@./.maui/knowledge/standards/tamanu-dbt-conventions.md
 
 ## Repository: <repo-name>
 
@@ -107,10 +119,14 @@ extend = ".maui/ruff.toml"
 ```bash
 mkdir -p .claude
 # Windows (requires Developer Mode or admin):
-mklink /D .claude\skills .maui\.agents\skills
+mklink /D .claude\skills .maui\skills
 # macOS/Linux:
-ln -s ../.maui/.agents/skills .claude/skills
+ln -s ../.maui/skills .claude/skills
 ```
+
+> **Migration note.** Skills moved from `.maui/.agents/skills/` to `.maui/skills/`.
+> If your repo's `.claude/skills` symlink still points at the old location, delete
+> and recreate it using the commands above.
 
 Add `.claude/` to `.gitignore` (the symlink is local, not committed).
 

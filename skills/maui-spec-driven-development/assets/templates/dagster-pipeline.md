@@ -8,7 +8,7 @@
 | **Type** | Dagster `[asset \| job \| sensor \| schedule]` |
 | **Status** | `draft` |
 | **Owner** | `@<github_handle>` |
-| **Linear issue** | [BES-XXX](url) |
+| **Linear issue** | [MAUI-XXX](url) |
 | **Repo** | `data-lake` (or other) |
 | **Trigger** | `[schedule \| sensor \| manual \| on-demand]` |
 | **Schedule** | `0 2 * * *` (cron) or N/A |

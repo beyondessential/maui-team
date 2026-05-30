@@ -4,13 +4,13 @@
 
 | Field | Value |
 |---|---|
-| **Name** | `<model_name>` (e.g. `coh__nutrition_registry`) |
+| **Name** | `<model_name>` (e.g. `der__cohort_nutrition_registry`) |
 | **Type** | dbt model |
-| **Layer** | `[base \| int \| fct \| dim \| coh \| ds \| report]` |
+| **Layer** | `[base \| ref \| lkp \| surveys \| can \| der \| metric \| int \| ds \| report \| fct (legacy) \| dim (legacy)]` |
 | **Materialisation** | `[view \| table \| incremental \| ephemeral]` |
 | **Status** | `draft` |
 | **Owner** | `@<github_handle>` |
-| **Linear issue** | [BES-XXX](url) |
+| **Linear issue** | [MAUI-XXX](url) |
 | **Repo** | `<repo-name>` |
 | **Created** | YYYY-MM-DD |
 | **Last updated** | YYYY-MM-DD |
@@ -35,8 +35,8 @@ State explicitly. The grain definition is the most common source of model bugs.
 
 | Reference | Why we need it |
 |---|---|
-| `{{ ref('base__patients') }}` | Patient demographics |
-| `{{ ref('coh__<name>') }}` | Cohort definition |
+| `{{ ref('can__person') }}` | Person demographics (OMOP-shaped) |
+| `{{ ref('der__cohort_<name>') }}` | Cohort definition |
 
 ### Required input columns
 
@@ -44,8 +44,8 @@ For each upstream, list the columns this model depends on. Helps with impact ana
 
 | Upstream | Columns used |
 |---|---|
-| `base__patients` | `id`, `date_of_birth`, `sex`, `deleted_at` |
-| `coh__<name>` | `patient_id`, `cohort_definition_id`, `entry_date`, `exit_date` |
+| `can__person` | `person_id`, `birth_date`, `gender_concept_id` |
+| `der__cohort_<name>` | `subject_id`, `cohort_id`, `cohort_start_date`, `cohort_end_date` |
 
 ### Freshness expectations
 
@@ -80,10 +80,10 @@ Each criterion implements one or more BL clauses and is realised as a dbt test o
 ## Lineage
 
 ```
-upstream                             this model                downstream
-base__patients   ──┐
-coh__<name>      ──┼──►   ds__<name>_encounters   ──►   <name>_line_list (report)
-                                                    └►   Tupaia: <dashboard_name>
+upstream                              this model                  downstream
+can__person       ──┐
+der__cohort_<name> ──┼──►  ds__<name>_encounters   ──►  <name>_line_list (report)
+                                                         └►  Tupaia: <dashboard_name>
 ```
 
 ## Open questions

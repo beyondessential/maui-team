@@ -8,7 +8,7 @@
 | **Type** | Tupaia dashboard |
 | **Status** | `draft` |
 | **Owner** | `@<github_handle>` |
-| **Linear issue** | [BES-XXX](url) |
+| **Linear issue** | [MAUI-XXX](url) |
 | **Country / deployment** | |
 | **Programme** | _e.g. NCD, RMNCH, IDSR_ |
 | **Stakeholders** | _e.g. MoH NCD team, country focal point_ |
@@ -56,8 +56,12 @@ _(repeat per panel)_
 ## Data lineage
 
 ```
-tamanu_source_dbt: bases.<table>  ──►  data_staging: fct__<name>  ──►  data_lake: ds__<name> (Tupaia replica)  ──►  Tupaia dashboard
+tamanu-source-dbt: bases.<entity>  ──►  can__ / der__ / metric__  ──►  ds__<name>  ──►  Tupaia Data Table  ──►  Tupaia dashboard
 ```
+
+(`data-staging` package content is being merged into `tamanu-source-dbt`;
+`data-lake` orchestrates non-Tamanu pipelines, and is being renamed to
+`bes-data-pipelines`. See `../architecture/data-architecture.md`.)
 
 Link each panel back to the dbt model that powers it. If multiple panels share a model, note that — it's a dependency to track.
 

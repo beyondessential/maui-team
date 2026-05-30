@@ -96,7 +96,7 @@ Populated specs live in the consuming repo, NOT in `maui-team`. Default location
 
 Examples:
 - `data-lake/specs/dagster-pipeline/tamanu_fj_replication.md`
-- `tamanu-source-dbt/specs/dbt-model/coh__nutrition_registry.md`
+- `tamanu-source-dbt/specs/dbt-model/der__cohort_nutrition_registry.md`
 - `fsm-data-migration/specs/data-migration/patients.md`
 
 If the repo has no `specs/` directory, create it together with a brief `specs/README.md` pointing readers at the SPEC_GUIDE in this skill's `assets/SPEC_GUIDE.md`.

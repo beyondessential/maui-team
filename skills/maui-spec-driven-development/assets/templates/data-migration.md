@@ -8,7 +8,7 @@
 | **Type** | Data migration |
 | **Status** | `draft` |
 | **Owner** | `@<github_handle>` |
-| **Linear issue** | [BES-XXX](url) |
+| **Linear issue** | [MAUI-XXX](url) |
 | **Source system** | `<name + version>` |
 | **Target system** | Tamanu `<version>` |
 | **Country / deployment** | _e.g. fj, ki, fsm_ |

@@ -14,17 +14,17 @@ Examples: `feature/patient-report`, `fix/translation-bug`, `hotfix/missing-trans
 
 ## Version branches
 
-Maui manages multiple deployments running different versions. Long-running version branches are named by `<major>.<minor>`:
+Tamanu-bound repositories (`tamanu-source-dbt`, `tamanu-dbt-*`, `data-staging`)
+carry long-running version branches that track deployed Tamanu versions. The
+mechanics live in `tamanu-dbt-conventions.md` § Version branches; the rules
+below apply to every Maui repo.
 
-```
-main      ← latest (e.g. 2.50.x)
-2.49      ← maintained for deployments on 2.49
-2.48      ← maintained for deployments on 2.48
-```
-
-- Cut short-lived work branches from the relevant version branch, not from `main`
-- Use `fix/` for normal fixes; `hotfix/` when the fix is urgent and targets a specific deployed version
-- Backport fixes to older version branches via cherry-pick or a separate PR against the version branch
+- `main` is always protected; never commit directly
+- Cut short-lived work branches from the appropriate base (`main` or a version
+  branch — see `tamanu-dbt-conventions.md` for the picking rule on
+  Tamanu-bound repos)
+- Use `fix/` for normal fixes; `hotfix/` when the fix is urgent and targets a
+  specific deployed version
 
 ## Commit messages
 
