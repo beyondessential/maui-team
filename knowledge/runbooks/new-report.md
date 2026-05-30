@@ -95,6 +95,26 @@ Conventions:
 
 Matching config at the equivalent path under `models/reports/config/`.
 
+### Date range is mandatory in the UI — handle "no date filter" reports explicitly
+
+The Tamanu reports UI always renders a date-range input. When a report
+intentionally returns all rows regardless of time (registry snapshots, lookups,
+"all patients currently in state X" line-lists), reflect that in the config
+*and* the SQL so the UI and behaviour stay aligned:
+
+- Set `"defaultDateRange": "allTime"` in the report config.
+- Set `"dateRangeLabel"` to a string that tells the user the date inputs do not
+  affect output — e.g. `"Date range not in use - report includes all patients
+  matching the selected filters"`.
+- Omit `fromDate` / `toDate` from the SQL `where` clause. Don't accept the
+  parameters and silently ignore them — drop the filter entirely so a future
+  reader doesn't have to reason about whether it's wired up.
+
+If the date range is *optional but functional* (defaults to `allTime` but
+narrows when the user enters dates), keep the SQL filter and use a
+`dateRangeLabel` that prompts the user (e.g. `"Enter dates or leave blank for
+all"`), as in `upcoming-vaccinations-line-list`.
+
 ### 4. Sensitive variant *(tamanu-source-dbt only)*
 
 Only create when the report includes encounters from sensitive facilities;
