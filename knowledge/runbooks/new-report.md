@@ -89,7 +89,7 @@ Conventions:
 - `{{ ref(...) }}` for all upstream — typically `ds__<dataset>`; `metric__`,
   `der__`, `can__` directly when natural. Never `source()` (D10)
 - `{{ translate_label('field_name') }}` for user-facing column aliases
-- `{{ to_user_selected_timezone(field) }}` for datetime fields
+- `{{ to_user_selected_timezone(field) }}` for datetime fields — applied **only** in the report layer; upstream layers pass timestamps through untouched. See [`../standards/tamanu-dbt-conventions.md` § Timezone handling](../standards/tamanu-dbt-conventions.md#timezone-handling).
 - `order by` allowed (reports only)
 - Production-safe SQL (see Production promotion above)
 

@@ -56,6 +56,12 @@ Each instance may define localised versions of `data_staging` dimension models w
 
 Tupaia mapping tables (`facility_mapping`, subdivision tables) are incomplete — always use LEFT JOIN with a COALESCE fallback.
 
+Tamanu FK columns are often nullable — verify against the model/migration in `../tamanu` before picking INNER vs LEFT JOIN, or rows silently drop (e.g. `patient_program_registration_conditions.program_registry_condition_id` is nullable while `program_registry_condition_category_id` is NOT NULL).
+
+## Timezone handling
+
+Clinical/domain datetimes flow through bases and `ds__` as timestamps untouched — no `at time zone`, no `to_user_selected_timezone()` wrap at those layers. The `to_user_selected_timezone()` macro is applied **only** in the report layer (`to_char({{ to_user_selected_timezone('field') }}, var("date_format"))`), where it respects the viewer's `:timezone` session variable and defaults to `var("timezone")` when unset (so the deployment TZ stays the practical default). Audit metadata (`created_at`, `updated_at`, `deleted_at`) is the only exception: those columns are `timestamp with timezone`, and the base models present them in deployment-local wall-clock time via `at time zone '{{ var("timezone") }}'`.
+
 ## Deduplication with `DISTINCT ON`
 
 - `ORDER BY ... ASC` = keeps the earliest record
