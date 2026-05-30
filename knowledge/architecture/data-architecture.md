@@ -97,5 +97,4 @@ Cross-team work is scoped as separate asks rather than landed into the data team
 - [`../glossary.md`](../glossary.md) — terminology (OMOP, Tamanu, Tupaia, the three `data-lake`s, …)
 - OMOP CDM v5.4: <https://ohdsi.github.io/CommonDataModel/>
 - OHDSI Athena (vocabulary lookup): <https://athena.ohdsi.org/>
-- WHO SMART Guidelines: <https://www.who.int/teams/digital-health-and-innovation/smart-guidelines>
-- WHO Digital Adaptation Kits (DAKs): <https://www.who.int/teams/digital-health-and-innovation/smart-guidelines/digital-adaptation-kits>
+- WHO SMART Guidelines (includes Digital Adaptation Kits / DAKs): <https://www.who.int/teams/digital-health-and-innovation/smart-guidelines>
