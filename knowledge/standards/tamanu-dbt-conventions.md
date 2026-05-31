@@ -126,3 +126,5 @@ Translation string IDs in `report_translations_*.csv` follow a concept-prefix co
 | Generic concept not tied to one survey | bare concept | `vitalSign`, `encounterId`, `patientName` |
 
 `<SurveyID>` matches the Tamanu survey ID (camelCase, as it appears in `surveys.id`). The trailing portion is the field name in camelCase.
+
+Keep rows in `report_translations_*.csv` sorted alphabetically by `stringId` (header row first). Append-only ordering produces noisy diffs and hides duplicates; the generation script tolerates any order, so the on-disk file is the only thing that needs to stay sorted.
