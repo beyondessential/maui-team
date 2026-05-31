@@ -94,6 +94,12 @@ can live as a replica-only `metric__` consumed via Data Tables. See
 - Report models need their JSON config
 - `metric__` models need a row in `metric_definitions.csv`
   ([D5](../architecture/data-architecture/decisions.md))
+- Column descriptions are public-facing — they surface in dbt docs, data
+  tables, and the reporting UI seen by end users. Describe what the column
+  is, not how it's wired up. Don't reference SDD anchors (`BL-NNN`,
+  `AC-NNN`), upstream base column names, or internal implementation
+  details. Those belong in the spec or in `-- BL-NNN` code comments, not
+  in the user-facing description.
 
 ## Testing
 
