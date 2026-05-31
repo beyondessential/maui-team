@@ -14,6 +14,13 @@ Skip: trivial fixes, hotfixes, throwaway exploration.
 Test: would a teammate in six months know *why* the code does what it does? If
 yes, no spec. If no, spec it.
 
+**Spec lands with the code.** Creating one of the above artefacts in a PR means
+the PR also adds the spec at `<repo>/specs/<artefact-type>/<spec-name>.md`.
+Updating an existing artefact means revising its spec in the same PR — touch
+the `BL` / `AC` clauses your change affects, or write a retrospective spec
+(Mode A) if none exists yet. Spec and implementation are reviewed together;
+they don't land in separate PRs.
+
 ## Locations
 
 | Artefact | Location |

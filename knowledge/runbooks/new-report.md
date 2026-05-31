@@ -57,6 +57,22 @@ Full architecture:
 
 ## Steps
 
+### 0. Spec the report first
+
+Before writing SQL, draft the spec at `specs/dbt-model/<report-name>.md` using
+[`.maui/skills/maui-spec-driven-development/assets/templates/dbt-model.md`](../../skills/maui-spec-driven-development/assets/templates/dbt-model.md).
+Capture the grain, business-logic clauses (`BL-NNN`), and acceptance criteria
+(`AC-NNN`) from the Linear issue and any supplied mock-ups. The spec lands in
+the same PR as the implementation; reference its `BL-NNN` IDs from the SQL as
+`-- BL-NNN:` comments (see
+[`../standards/sdd-conventions.md`](../standards/sdd-conventions.md) § Spec
+anchoring).
+
+Updating an existing report? Update the existing spec in the same PR — add or
+revise the `BL` / `AC` clauses the change touches. If the report has no spec
+yet and the change is non-trivial, write a retrospective spec alongside the
+update (Mode A; see SDD conventions).
+
 ### 1. Find a reference report `[parallel with 2]`
 
 ```bash
@@ -148,6 +164,7 @@ To `report_translations_standard.csv`:
   (`survey<SurveyID><Field>` for survey-bound fields, bare concept for generic
   labels)
 - Don't include the auto-prefix `report.reporting.` in the CSV key
+- Insert the new row in alphabetical order by `stringId` — don't append
 
 ```bash
 python scripts/generate_translation_macro.py
