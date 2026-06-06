@@ -88,6 +88,33 @@ told to follow it.
 
 ---
 
+## Spec-driven development
+
+For any non-trivial new dbt model (`ref__` / `lkp__` / `can__` / `der__` /
+`metric__` / `ds__`), Dagster pipeline, data extract, migration, or dashboard:
+
+1. **Write the spec.** Spec lives at `<repo>/specs/<artefact-type>/<spec-name>.md`.
+   Start from a template in `.maui/skills/maui-spec-driven-development/assets/templates/`.
+2. **Each `BL-XXX` clause is one declarative sentence.** No embedded rationale,
+   no file:line references, no code-line hand-holding. A 40% length reduction
+   on first review is normal.
+3. **Anchor code to clauses.** At each implementation site add a `# BL-XXX:`
+   (or `-- BL-XXX:`) comment naming the clause it fulfils. Tests prefix the
+   AC: `test_ac_001_<descriptor>` for pytest, `ac_001_<descriptor>` for dbt.
+4. **Spec and code land in the same PR.** Before merging, squash in-branch
+   change-log rows to one merge-dated entry; delete (don't annotate) any
+   resolved `DV-XXX` / `OQ-XXX` rows. The trunk spec is a contract, not a
+   history book.
+5. **Lifecycle.** New specs start `Status: draft`, bump to `review` when
+   opening the PR, `implemented` when ACs all pass.
+
+Skip specs for trivial bugfixes, hotfixes, or throwaway exploration.
+
+Full convention set: `@./.maui/knowledge/standards/sdd-conventions.md`.
+Authoring guide and templates: `.maui/skills/maui-spec-driven-development/`.
+
+---
+
 ## Code review
 
 This repo uses Claude Code review via GHA. See `.maui/REVIEW.md` (or a repo-local `REVIEW.md`) for review criteria. Claude runs automatically on PR open/reopen; re-trigger with `/review` comment.

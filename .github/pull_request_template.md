@@ -24,3 +24,4 @@
 - [ ] CI green
 - [ ] Docs updated if applicable
 - [ ] Spec status updated if implementing/changing a spec
+- [ ] Spec change-log squashed to a single merge-dated entry; resolved `DV-XXX` / `OQ-XXX` rows deleted (not annotated)
