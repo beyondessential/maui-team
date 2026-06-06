@@ -70,6 +70,24 @@ Numbered steps. Each is a `BL` clause.
 - **Downstream assets / dbt projects:** _list_
 - **External systems:** _e.g. Tamanu DB, S3 bucket, Tupaia replication target_
 
+## Configuration files
+
+_Map each file the pipeline depends on to its role. Helps reviewers locate the
+moving parts; omit when there's only one file._
+
+| File | Purpose |
+|---|---|
+| `<path/to/file>` | _what it configures_ |
+
+## Operational setup (one-time)
+
+_What an operator must provision before the pipeline can run. Omit when there's
+nothing beyond standard deploy. Examples: env vars, secrets sourced from a
+secret manager, third-party app installations, DNS records._
+
+1.
+2.
+
 ## Open questions
 
 | ID | Question | Owner | Due |

@@ -1,0 +1,76 @@
+name: Spec checks
+
+# Reusable workflow — validates spec-driven development conventions.
+#
+# Pass 1 (error): every `# BL-XXX:` / `-- BL-XXX:` code anchor must reference
+# a BL clause that exists in some spec under `specs/`.
+# Pass 2 (warning): every BL clause in a spec should have at least one code
+# anchor. Configuration-only clauses without anchors are surfaced as warnings.
+# Pass 3 (warning): BL clauses are flagged if they exceed the sentence budget
+# (default 2). See `.maui/knowledge/standards/sdd-conventions.md` § Tightening.
+
+on:
+  workflow_call:
+    inputs:
+      specs-dir:
+        description: 'Path to specs directory in the consumer repo'
+        required: false
+        default: 'specs'
+        type: string
+      code-dir:
+        description: 'Root of code tree to scan for anchors'
+        required: false
+        default: '.'
+        type: string
+      bl-max-sentences:
+        description: 'Warn when a BL clause exceeds this many sentences'
+        required: false
+        default: 2
+        type: number
+      strict-spec-coverage:
+        description: 'Treat spec-without-anchor as an error rather than a warning'
+        required: false
+        default: false
+        type: boolean
+      strict-bl-length:
+        description: 'Treat over-budget BL clauses as errors rather than warnings'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  check-anchors:
+    name: Spec anchor + length checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout consumer repo
+        uses: actions/checkout@v4
+
+      - name: Checkout maui-team scripts
+        uses: actions/checkout@v4
+        with:
+          repository: beyondessential/maui-team
+          path: .maui-team-tools
+          ref: main
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Check spec ↔ code anchors
+        run: |
+          ARGS="--specs-dir ${{ inputs.specs-dir }} --code-dir ${{ inputs.code-dir }}"
+          if [ "${{ inputs.strict-spec-coverage }}" = "true" ]; then
+            ARGS="$ARGS --strict-spec-coverage"
+          fi
+          python .maui-team-tools/scripts/check_spec_anchors.py $ARGS
+
+      - name: Check BL clause lengths
+        run: |
+          ARGS="--specs-dir ${{ inputs.specs-dir }} --max-sentences ${{ inputs.bl-max-sentences }}"
+          if [ "${{ inputs.strict-bl-length }}" = "true" ]; then
+            ARGS="$ARGS --strict"
+          fi
+          python .maui-team-tools/scripts/check_bl_length.py $ARGS
