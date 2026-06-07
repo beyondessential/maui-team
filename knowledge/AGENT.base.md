@@ -13,9 +13,10 @@ This file is imported by all Maui repositories via the `.maui/` submodule. It pr
    ```
    @./.maui/knowledge/AGENT.base.md
    @./.maui/knowledge/standards/git-conventions.md
+   @./.maui/knowledge/standards/sdd-conventions.md
    @./.maui/knowledge/standards/dbt-conventions.md
    ```
-   Only import the standards relevant to the repo — don't import all of them.
+   `sdd-conventions.md` applies to every Maui repo (we use SDD universally) — import it by default. Otherwise only import the standards relevant to the repo — don't import all of them.
 
    Repos that use dbt (`data-lake`, `data-staging`, `tamanu-source-dbt`, `tamanu-dbt-*`) should also import:
    ```
