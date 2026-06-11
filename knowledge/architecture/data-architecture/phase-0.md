@@ -41,7 +41,7 @@ Linear; this list mirrors them for in-repo visibility.
 - [ ] **Reference `ref__` and `lkp__` models built** — one of each pattern:
   - **`ref__` OMOP wrapper:** `ref__care_site` reading from `bases/`, applying
     OMOP column naming. Establishes the health system data wrapper pattern
-  - **Standard `lkp__` seed in `tamanu-source-dbt`:** `lkp__age_band` shipping
+  - **Standard `lkp__` seed in `tamanu-source-dbt`:** `lkp__age_group` shipping
     real data as a seed. Establishes the standard lookup seed pattern
   - **Deployment-specific `lkp__` mapping:** `lkp__facility_tupaia_mapping` in
     a sample `tamanu-dbt-<deployment>` project, binding Tamanu facility UUIDs

@@ -79,14 +79,14 @@ The package ships **mock seed data** for these models for package testing and CI
 `lkp__` holds reference data that the data team curates and owns - analytic groupings, cross-system mappings, and standard codings that aren't OMOP health system entities and don't live in Tamanu's source data.
 
 **What `lkp__` is for:**
-- **Analytic groupings** - standard buckets used across metrics (`lkp__age_band`, `lkp__pregnancy_trimester`)
+- **Analytic groupings** - standard buckets used across metrics (`lkp__age_group`, `lkp__pregnancy_trimester`)
 - **Cross-system mappings** - bind IDs across systems (`lkp__facility_tupaia_mapping` binds Tamanu facility UUIDs to Tupaia entity codes)
 - **Hierarchies not in Tamanu** - administrative or health-system context Tamanu doesn't model (`lkp__health_district`, `lkp__village_hierarchy`)
 - **Standard codings** - reference vocabularies shipped as seeds (`lkp__imaging_type`, `lkp__encounter_class`, `lkp__lab_category`, `lkp__vital_type`)
 
 | Model | Purpose | Data source |
 |---|---|---|
-| `lkp__age_band` | Standard age bucketings for analytics | Seed in `tamanu-source-dbt` |
+| `lkp__age_group` | Standard age bucketings for analytics | Seed in `tamanu-source-dbt` |
 | `lkp__imaging_type` | Imaging modalities (X-ray, CT, MRI, …) | Seed in `tamanu-source-dbt` |
 | `lkp__encounter_class` | Encounter classes (inpatient, outpatient, emergency, …) | Seed in `tamanu-source-dbt` |
 | `lkp__lab_category` | Lab test categories | Seed in `tamanu-source-dbt` |
@@ -199,7 +199,7 @@ Indicators derived from non-Tamanu data are out of scope for this layer's first 
 | `period_granularity` | text | `day` / `week` / `month` / `quarter` / `year` |
 | `value_numeric` | numeric | Nullable; for quantitative metrics |
 | `value_boolean` | boolean | Nullable; for binary metrics (e.g. controlled / not controlled) |
-| **disaggregation columns** | various | Explicit columns per disaggregation (e.g. `sex text`, `age_band text`, `facility_id uuid`). Each metric declares its own. NULL means "rolled up across this dimension" - see below. |
+| **disaggregation columns** | various | Explicit columns per disaggregation (e.g. `sex text`, `age_group text`, `facility_id uuid`). Each metric declares its own. NULL means "rolled up across this dimension" - see below. |
 
 **On disaggregation as explicit columns:** each metric's disaggregations are explicit, named, typed columns rather than a single `jsonb` column. This means:
 - Per-metric schema evolution (adding a new disaggregation is a model + registry PR), accepted as the cost
@@ -256,7 +256,7 @@ Schema (shared across canonical and deployment-specific seeds):
 | `definition_rationale` | Short justification - for external standards, why this one over others; for `BES`, why an internal definition rather than an external standard |
 | `unit` | `count`, `percentage`, `rate_per_1000`, etc. `NULL` for non-metric kinds |
 | `subject_grain` | `patient`, `encounter`, `facility`, etc. |
-| `disaggregations` | Comma-separated list of disaggregation column names the artefact produces (e.g. `sex,age_band,facility_id`) |
+| `disaggregations` | Comma-separated list of disaggregation column names the artefact produces (e.g. `sex,age_group,facility_id`) |
 | `variant_of` | If this row is a deployment-specific definition variant of an upstream metric, the parent `metric_id`; else `NULL`. See "Definition variance" below |
 | `owner` | Team or person responsible |
 | `status` | `draft` / `approved` / `deprecated` |
@@ -277,7 +277,7 @@ The override mechanism is the same; what differs is whether the deployment flags
 -- models/metrics/metric__hypertension_controlled.sql
 {{ config(
   materialized = ('view' if target.name.startswith('reporting_') else 'incremental'),
-  unique_key = ['metric_id', 'subject_id', 'period_start', 'sex', 'age_band', 'facility_id'],
+  unique_key = ['metric_id', 'subject_id', 'period_start', 'sex', 'age_group', 'facility_id'],
 ) }}
 
 select
@@ -289,11 +289,11 @@ select
   'month'                   as period_granularity,
   case when m.systolic < 140 and m.diastolic < 90 then 1 else 0 end as value_numeric,
   p.sex,
-  ab.age_band,
+  ab.age_group,
   cs.care_site_id           as facility_id
 from {{ ref('can__measurement') }} m
 join {{ ref('can__person') }} p on p.person_id = m.person_id
-join {{ ref('lkp__age_band') }} ab on ab.age_years = p.age_at_measurement
+join {{ ref('lkp__age_group') }} ab on ab.age_years = p.age_at_measurement
 join {{ ref('ref__care_site') }} cs on cs.care_site_id = m.care_site_id
 where m.measurement_concept_id in (3004249, 3012888)  -- systolic, diastolic BP
 ```
@@ -302,7 +302,7 @@ Corresponding `metric_definitions.csv` row:
 
 ```csv
 metric_id,kind,name,description,numerator_description,denominator_description,unit,subject_grain,disaggregations,definition_source,definition_source_code,owner,status
-hypertension_controlled,metric,Hypertension control rate,Patients with controlled BP at last measurement,Patients with systolic < 140 and diastolic < 90,Patients with a BP measurement in period,percentage,patient,"sex,age_band,facility_id",WHO PEN,PEN-CVD-3,data team,active
+hypertension_controlled,metric,Hypertension control rate,Patients with controlled BP at last measurement,Patients with systolic < 140 and diastolic < 90,Patients with a BP measurement in period,percentage,patient,"sex,age_group,facility_id",WHO PEN,PEN-CVD-3,data team,active
 ```
 
 Tupaia consumes via a Data Table: `select * from {dbt_schema}.metric__hypertension_controlled`. The dashboard chooses which disaggregations to render and which to roll up by filtering on those columns - NULL rows on a disaggregation column are the roll-up.

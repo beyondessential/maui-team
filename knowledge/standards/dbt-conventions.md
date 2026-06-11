@@ -222,5 +222,5 @@ model's `.yml`.
 deployment-local codings) used by `can__`, `der__`, `metric__`, and `ds__`.
 A model that holds (Tamanu facility UUID → external entity code) is
 `map__<system>_facility`; a model that holds (age in years → analytic age
-band) is `lkp__age_band`. Use `map__` when the value-mapping crosses
+band) is `lkp__age_group`. Use `map__` when the value-mapping crosses
 system boundaries; use `lkp__` when it stays in Tamanu/analytic space.
