@@ -237,6 +237,12 @@ e.concept_id    as ethnicity_concept_id   -- from map__omop_ethnicity
 
 ### `map__omop_<domain>` seeds
 
+`map__omop_*` is one instance of the broader `map__<system>_<domain>`
+external-system mapping pattern — see
+[`dbt-conventions.md` § `map__<system>_<domain>`](dbt-conventions.md) for the
+full convention. The OMOP-specific notes below describe what `map__omop_*`
+adds on top.
+
 All local → OMOP mappings live in seeds; `can__` / `der__` join, never inline.
 
 | Scope | Coverage | Repo |
@@ -248,9 +254,6 @@ Schema: `local_code`, `local_name`, `concept_id`, `concept_name`, `vocabulary_id
 Look up at [OHDSI Athena](https://athena.ohdsi.org/). Document vocabulary
 source in the seed's `.yml`. Only add concept columns when actively used —
 never speculatively.
-
-`map__omop_*` ≠ `lkp__`: the former translates local codes to OMOP concepts;
-the latter is operational join targets.
 
 Repo `AGENT.md` lists which `map__omop_*` seeds exist under "Cohort
 configuration".

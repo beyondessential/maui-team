@@ -179,15 +179,48 @@ logic → macro called from both Tamanu and Tupaia models.
 
 `der__` follows the env-aware pattern above.
 
-### `map__omop_<domain>` concept maps
+### `map__<system>_<domain>` external-system mappings
 
-OMOP concept shadow columns (SNOMED, LOINC, RxNorm) go in `can__` and `der__`
-only — never in base models. Mappings live in `map__omop_<domain>` seeds:
+`map__<system>_<domain>` is the general prefix for models and seeds that
+translate Tamanu identifiers to an external system's identifiers. The
+`<system>` token names the destination (`omop`, `dhis`, `tupaia`, …); the
+`<domain>` names the entity domain (`sex`, `ethnicity`, `data_element`,
+`org_unit`, `facility`, …).
 
-- Universal (e.g. `map__omop_sex`) → `tamanu-source-dbt`
-- Deployment-specific (local codes) → `tamanu-dbt-*`
+Examples:
 
-Schema: `local_code`, `local_name`, `concept_id`, `concept_name`, `vocabulary_id`.
+| Model | What it binds |
+|---|---|
+| `map__omop_sex` | Tamanu sex codes → OMOP concept IDs (SNOMED) |
+| `map__omop_ethnicity` | Tamanu ethnicity codes → OMOP concept IDs |
+| `map__dhis_org_unit` | Tamanu facility IDs → DHIS2 org-unit UIDs |
+| `map__dhis_data_element` | Tamanu indicator names → DHIS2 data-element UIDs |
+| `map__tupaia_facility` | Tamanu facility UUIDs → Tupaia entity codes |
 
-`map__omop_*` ≠ `lkp__`: the former translates local codes to OMOP concepts;
-the latter is operational join targets.
+**Where each lives:**
+
+- **Universal mappings** (apply to every deployment, e.g. `map__omop_sex`,
+  `map__omop_ethnicity`) → `tamanu-source-dbt`.
+- **Deployment-specific mappings** (per-instance UIDs, local code maps,
+  facility bindings) → `tamanu-dbt-<deployment>`.
+
+**Materialisation:** seed-backed by default (the destination's IDs are
+static reference data and benefit from CSV-style review). View-over-`(values
+…)` is acceptable when the dataset is small enough that authoring a CSV adds
+no value and the SQL keeps it inline-reviewable. Either way, the model is a
+`view` — no incremental or table materialisation; the data is small and
+slow-changing.
+
+**OMOP concept shadow columns** (SNOMED, LOINC, RxNorm) go in `can__` and
+`der__` only — never in base models. Schema for `map__omop_*`:
+`local_code`, `local_name`, `concept_id`, `concept_name`, `vocabulary_id`.
+Other `map__<system>_*` schemas are system-specific; document them in the
+model's `.yml`.
+
+**`map__<system>_*` ≠ `lkp__`.** `map__` translates between code systems;
+`lkp__` is operational join targets (analytic groupings, hierarchies,
+deployment-local codings) used by `can__`, `der__`, `metric__`, and `ds__`.
+A model that holds (Tamanu facility UUID → external entity code) is
+`map__<system>_facility`; a model that holds (age in years → analytic age
+band) is `lkp__age_band`. Use `map__` when the value-mapping crosses
+system boundaries; use `lkp__` when it stays in Tamanu/analytic space.

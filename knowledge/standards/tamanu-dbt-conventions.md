@@ -89,6 +89,97 @@ WHERE valid_from::DATE <= rm.end_of_month
   AND valid_to::DATE >= rm.end_of_month
 ```
 
+## Narrower-window parallel intermediates
+
+Tamanu reports run against the production schema as **views over the
+compiled bundle** ([data-architecture/decisions.md](../architecture/data-architecture/decisions.md)
+D5/D9) — every report query re-evaluates the full upstream chain at run time.
+For reports that aggregate over the full reporting history (multi-year
+indicator panels for DHIS2 export, registry summaries, etc.), the view chain
+can run for tens of seconds against the production DB.
+
+The standard mitigation is a **narrower-window parallel intermediate**: a
+sibling model of the all-time intermediate that filters to (typically) the
+past 3 reporting months, paired with a sibling report that consumes only the
+narrow-window chain. Routine monthly export runs hit the narrow chain
+(sub-second); ad-hoc historical pulls hit the all-time chain (slow but rare).
+
+This is **not a stopgap** for the architecture's incremental-materialisation
+direction ([decisions.md](../architecture/data-architecture/decisions.md) D5):
+replica-side incremental materialisation helps Tupaia consumers and ad-hoc
+analytics, but the production view chain still re-evaluates at query time by
+design (live data, no staleness). Narrower-window intermediates are the
+production-side answer and stay relevant alongside any future incremental
+work on the replica.
+
+### Implementation pattern — collapse main + `_past3m` onto a macro
+
+Without care, each indicator ends up with two parallel SQL files that drift
+out of sync as bugs and edge cases land in only one. Use a single body macro
+per indicator under `macros/<deployment>_reporting/`, parameterised by a
+`window` argument, with thin model files calling it:
+
+```
+macros/<deployment>_reporting/
+  _helpers.sql                            # window-start, ref-suffix helpers
+  cohort_<program>_patients.sql           # one body macro per indicator
+  indicators_consultations.sql
+  ...
+
+models/intermediate/
+  int__<...>_patients.sql                 # {{ <name>(window='all_time') }}
+  int__<...>_patients_past3m.sql          # {{ <name>(window='past3m') }}
+```
+
+The model files are vestigial — dbt needs them in the manifest for
+ref-graph resolution, but the SQL lives in the macro.
+
+**Shared helpers.** Three helpers handle the differing fragments so each body
+macro only branches on `{% if window == 'past3m' %}` in one place:
+
+```jinja
+{% macro <deployment>_reporting_months_start(window) %}
+{%- if window == 'past3m' -%}
+date_trunc('month', {{ get_current_date() }} - interval '3 months')::date
+{%- else -%}
+'{{ var("start_date") }}'::date
+{%- endif -%}
+{% endmacro %}
+
+{% macro <deployment>_past3m_lower_bound() %}
+date_trunc('month', {{ get_current_date() }} - interval '3 months')::date
+{% endmacro %}
+
+{% macro <deployment>_ref_suffix(window) %}
+{%- if window == 'past3m' -%}_past3m{%- endif -%}
+{% endmacro %}
+```
+
+**Switching upstream refs.** When a paired intermediate depends on another
+paired intermediate (e.g. `with_measurements` reads `patients`), the body
+macro composes the upstream ref using `<deployment>_ref_suffix(window)`:
+
+```jinja
+from {{ ref('int__<name>_patients' ~ suffix) }} cp
+```
+
+This keeps the all-time chain self-consistent and the past3m chain
+self-consistent — `int__X_past3m` only references other `_past3m`
+intermediates, all-time only references all-time.
+
+**When a pair diverges semantically.** If the main and past3m variants
+genuinely have different upstream layers (e.g. main rewired to consume
+`der__`, past3m still on `int__`), they can't share a macro. Document the
+divergence in the affected spec and either rewire past3m to match, or accept
+the gap as a stable divergence rather than dragging both back into one
+template. Reviewer signal: if more than one or two pairs diverge, the
+production-side perf strategy may need rethinking.
+
+Reference implementation: `tamanu-dbt-msf-syria/macros/ncd_reporting/` (10
+collapsed pairs spanning cohort selection, indicator aggregation, and
+measurement joins). Spec:
+`tamanu-dbt-msf-syria/specs/dbt-model/ncd-indicators-migration.md`.
+
 ## `logs.changes` window functions
 
 When using window functions against `logs.changes`, always order by:

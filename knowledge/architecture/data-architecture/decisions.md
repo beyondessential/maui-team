@@ -96,7 +96,7 @@ The package ships **mock seed data** for these models for package testing and CI
 
 Standard seeds live in `tamanu-source-dbt` and are rarely overridden. Cross-system mappings and deployment-specific hierarchies are inherently per-deployment and live in `tamanu-dbt-<deployment>` projects.
 
-`lkp__` is distinct from `map__omop_<domain>` seeds - those map local codes to OMOP concept IDs (vocabulary mapping); `lkp__` models are operational lookup tables used as join targets by `can__`, `der__`, `metric__`, and `ds__` models.
+`lkp__` is distinct from `map__<system>_<domain>` seeds (e.g. `map__omop_*`, `map__dhis_*`, `map__tupaia_*`) - those translate Tamanu identifiers to an external system's identifiers; `lkp__` models are operational lookup tables used as join targets by `can__`, `der__`, `metric__`, and `ds__` models.
 
 **Materialisation:** `lkp__` models are always views. The seed (or upstream `bases/` model, where the lookup is derived) is the source of truth; the view is a thin typed projection. No incremental or table materialisation - lookups are small and slow-changing, so view-on-seed reads are cheap.
 
@@ -123,6 +123,8 @@ Cohorts are the first and most-used derived element in BES; OMOP's other derived
 | (future) `der__drug_era` | Combined drug exposures into continuous treatment periods |
 
 **Why `can__` (and the family) and not `omop__`:** the prefixes describe our layers, not our commitment to a specific external standard. `can__` survives the OMOP-lite → full-OMOP → next-standard evolution. The `omop` token stays in `map__omop_<domain>` because those seeds genuinely target OMOP vocabularies - the prefix there describes the destination, not the layer.
+
+**`map__<system>_<domain>` is the general prefix for external-system code translation.** `map__omop_<domain>` is one instance (OMOP vocabularies); `map__dhis_<entity>` (DHIS2 UIDs — data elements, category option combos, org units), `map__tupaia_<entity>` (Tupaia entity codes), and similar bindings to other downstream systems follow the same shape. The prefix says "this translates Tamanu identifiers to the named external system's identifiers"; the suffix names the entity domain. Materialisation: seed-backed by default; view-over-`(values …)` when the dataset is small enough that authoring a CSV adds no value and the SQL keeps it inline-reviewable. Per [`../../standards/dbt-conventions.md`](../../standards/dbt-conventions.md) § `map__<system>_<domain>`, `map__<system>_*` is distinct from `lkp__`: `map__` *translates* between code systems; `lkp__` is operational join targets (analytic groupings, hierarchies, deployment-local codings) used by `can__` / `der__` / `metric__` / `ds__`.
 
 **Per-deployment variation:** standard implementations of `ref__`, `lkp__`, `can__`, `der__`, `metric__`, and `ds__` models live in `tamanu-source-dbt`. Most deployments run these directly. Deployments with genuine customisation needs create a `tamanu-dbt-<deployment>` project that references `tamanu-source-dbt` as a package and overrides only the specific models that need deployment-specific behaviour. See [`production-promotion.md`](production-promotion.md) § Version skew.
 
@@ -205,7 +207,30 @@ Indicators derived from non-Tamanu data are out of scope for this layer's first 
 
 Pre-aggregated metrics omit `subject_id`. Per-patient metrics keep `subject_id` populated; disaggregation columns are still present and typically NULL since the patient's identity carries the dimension values implicitly.
 
-**Registry seed - `metric_definitions.csv`** (in `tamanu-source-dbt/seeds/` for Tamanu-derived metrics; equivalent seed in `bes-data-pipelines` for non-Tamanu metrics):
+**Registry seed - `metric_definitions.csv`.** The canonical registry lives at
+`tamanu-source-dbt/seeds/metric_definitions.csv` for Tamanu-derived metrics
+(equivalent seed in `bes-data-pipelines` for non-Tamanu metrics). All
+deployments inherit the canonical registry automatically via the `tamanu-source-dbt`
+package — consumers read it as `{{ ref('metric_definitions') }}` without having
+to redeclare anything.
+
+**Deployment-specific entries** (deployment-only definitions, or
+deployment-flagged `variant_id` overrides of an upstream metric) live in
+`tamanu-dbt-<deployment>/seeds/metric_definitions_<deployment>.csv` — same
+schema, distinct filename so it composes alongside the canonical seed without
+shadowing it. The canonical seed is the source of truth for standard metrics
+and never gets overwritten by a deployment.
+
+> Use a deployment-specific row when:
+> - The metric exists only at one deployment (no shared standard upstream)
+> - Or the metric is a `variant_of` an upstream metric, where the deployment
+>   has changed the definition rules (D5 § Definition variance)
+>
+> Don't use it for implementation-only differences — those go via dbt model
+> override with the upstream row unchanged (D5 § Implementation difference).
+
+Schema (shared across canonical and deployment-specific seeds):
+
 
 | Column | Description |
 |---|---|
@@ -234,7 +259,7 @@ Pre-aggregated metrics omit `subject_id`. Per-patient metrics keep `subject_id` 
 | **Implementation difference** | Deployment uses a different survey form for blood pressure but the metric is still "% controlled at 6 months by WHO definition" | dbt package override - deployment repo defines `metric__<id>.sql` with deployment-specific SQL; dbt resolution makes it win | `NULL` - consumers see the same metric, same definition, same number-shape |
 | **Definition variance** | Deployment uses age band 18-69 instead of WHO standard 18-64; numerator includes additional conditions the standard excludes | Same dbt override mechanism, AND set `variant_id` on the output rows to a stable identifier | Deployment-set value (e.g. `fj_moh_2024`) |
 
-The override mechanism is the same; what differs is whether the deployment flags the variation as semantically meaningful. Implementation overrides are invisible by design - that's the point of the package + override pattern. Definition variants are registered in the deployment project's `metric_definitions.csv` with `variant_of = <parent_metric_id>` and a description of what differs. Reviewers check this on PR.
+The override mechanism is the same; what differs is whether the deployment flags the variation as semantically meaningful. Implementation overrides are invisible by design - that's the point of the package + override pattern. Definition variants are registered in the deployment project's `metric_definitions_<deployment>.csv` with `variant_of = <parent_metric_id>` and a description of what differs. Reviewers check this on PR.
 
 **Worked example.** A simple `metric__` model and its registry entry:
 
