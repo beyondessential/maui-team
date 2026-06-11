@@ -69,7 +69,6 @@ derived data assets share one catalogue. Extends the metric registry
 | `definition_rationale` | Short |
 | `omop_concept_id` | Domain concept (SNOMED preferred) |
 | `vocabulary_id` | `SNOMED`, `LOINC`, `RxNorm`, … |
-| `tupaia_code` | Legacy Tupaia code or NULL |
 | `unit` | `count`, `percentage`, … (metrics only) |
 | `subject_grain` | `patient`, `encounter`, `facility`, … |
 | `disaggregations` | Comma-separated column names |

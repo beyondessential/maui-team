@@ -29,6 +29,27 @@ they don't land in separate PRs.
 | Authoring guide | `.maui/skills/maui-spec-driven-development/assets/SPEC_GUIDE.md` |
 | Populated specs | `<repo>/specs/<artefact-type>/<spec-name>.md` |
 
+## Canonical vs deployment specs
+
+Artefacts whose *definition* is canonical (registered in
+`tamanu-source-dbt/seeds/metric_definitions.csv`, per D5) but whose
+*implementation* currently lives in a deployment repo get two specs:
+
+| Spec | Home | Owns |
+|---|---|---|
+| **Canonical definition spec** | `tamanu-source-dbt/specs/<artefact-type>/<name>.md` | What the artefact measures: clinical context, grain, output schema, definition-level `BL` clauses (membership rule, semantic invariants), `AC` clauses for definition correctness. The registry row's `spec_path` points here. |
+| **Deployment implementation spec** | `tamanu-dbt-<deployment>/specs/<artefact-type>/<name>.md` | How this deployment realises the canonical definition: which upstreams feed it, legacy columns preserved, Mode A migration divergences (`DV-XXX`), sunset / package-bump steps. Identity block links to the canonical spec. |
+
+The split mirrors D5's definition/implementation distinction. Implementation
+differences across deployments (different surveys, different `int__` chains
+feeding the same definition) are invisible at the canonical level — only
+definition variances (`variant_of` rows in a deployment-specific seed) get
+their own canonical-style spec.
+
+Single-spec is fine when the artefact is deployment-only (no canonical
+registry row) or when the canonical model + implementation both already live
+in `tamanu-source-dbt`.
+
 ## Lifecycle
 
 `draft` → `review` → `approved` → `implemented` → `deprecated`. Bump the
