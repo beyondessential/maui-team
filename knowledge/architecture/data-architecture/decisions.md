@@ -214,6 +214,14 @@ deployments inherit the canonical registry automatically via the `tamanu-source-
 package — consumers read it as `{{ ref('metric_definitions') }}` without having
 to redeclare anything.
 
+The same registry also catalogues the `der__` derived elements (cohorts,
+condition/drug/dose eras, episodes) that `metric__` rows depend on. A `kind`
+column discriminates the artefact type (`metric`, `cohort`, `condition_era`,
+`drug_era`, `dose_era`, `episode`); rows with `kind != 'metric'` have a NULL
+`unit` and `numerator_description`/`denominator_description`. This keeps the
+catalogue self-describing — agents and reviewers can answer "what cohorts and
+eras feed which metrics?" from one file.
+
 **Deployment-specific entries** (deployment-only definitions, or
 deployment-flagged `variant_id` overrides of an upstream metric) live in
 `tamanu-dbt-<deployment>/seeds/metric_definitions_<deployment>.csv` — same
@@ -235,18 +243,18 @@ Schema (shared across canonical and deployment-specific seeds):
 | Column | Description |
 |---|---|
 | `metric_id` | Globally unique; stable; never reused. Snake case (e.g. `hypertension_control_6m`) |
+| `kind` | Artefact kind: `metric`, `cohort`, `condition_era`, `drug_era`, `dose_era`, or `episode`. `metric__` rows use `metric`; `der__` rows use the relevant derived-element kind |
 | `name` | Human-readable label |
 | `description` | What it measures, in plain English |
-| `numerator_description` | Numerator in words |
-| `denominator_description` | Denominator in words |
-| `data_source` | `tamanu`, `msupply`, `senaite`, `weather`, etc. - which source system the metric derives from |
-| `definition_source` | Where the definition comes from: external standard name (e.g. `WHO_SMART_HIV`, `WHO_CORE_100`, `SDG`, `DHIS2_HDT`, `MANA`, `GLOBAL_FUND`, `OHDSI`, `IYCF`) or `BES` for internal definitions |
+| `numerator_description` | Numerator in words. `NULL` for non-metric kinds |
+| `denominator_description` | Denominator in words. `NULL` for count metrics and non-metric kinds |
+| `data_source` | `tamanu`, `msupply`, `senaite`, `weather`, etc. - which source system the artefact derives from |
+| `definition_source` | Where the definition comes from: external standard name (e.g. `WHO_SMART_HIV`, `WHO_CORE_100`, `SDG`, `DHIS2_HDT`, `MANA`, `GLOBAL_FUND`, `OHDSI`, `IYCF`, `MSF`) or `BES` for internal definitions |
 | `definition_source_code` | The standard's own identifier for the indicator if external (e.g. WHO DAK indicator code, SDG code, DHIS2 data element code); `NULL` for `BES` |
 | `definition_rationale` | Short justification - for external standards, why this one over others; for `BES`, why an internal definition rather than an external standard |
-| `tupaia_code` | Legacy Tupaia indicator code being replaced; else `NULL` |
-| `unit` | `count`, `percentage`, `rate_per_1000`, etc. |
+| `unit` | `count`, `percentage`, `rate_per_1000`, etc. `NULL` for non-metric kinds |
 | `subject_grain` | `patient`, `encounter`, `facility`, etc. |
-| `disaggregations` | Comma-separated list of disaggregation column names the metric produces (e.g. `sex,age_band,facility_id`) |
+| `disaggregations` | Comma-separated list of disaggregation column names the artefact produces (e.g. `sex,age_band,facility_id`) |
 | `variant_of` | If this row is a deployment-specific definition variant of an upstream metric, the parent `metric_id`; else `NULL`. See "Definition variance" below |
 | `owner` | Team or person responsible |
 | `status` | `draft` / `approved` / `deprecated` |
@@ -291,8 +299,8 @@ where m.measurement_concept_id in (3004249, 3012888)  -- systolic, diastolic BP
 Corresponding `metric_definitions.csv` row:
 
 ```csv
-metric_id,name,description,numerator_description,denominator_description,unit,subject_grain,disaggregations,definition_source,definition_source_code,owner,status
-hypertension_controlled,Hypertension control rate,Patients with controlled BP at last measurement,Patients with systolic < 140 and diastolic < 90,Patients with a BP measurement in period,percentage,patient,"sex,age_band,facility_id",WHO PEN,PEN-CVD-3,data team,active
+metric_id,kind,name,description,numerator_description,denominator_description,unit,subject_grain,disaggregations,definition_source,definition_source_code,owner,status
+hypertension_controlled,metric,Hypertension control rate,Patients with controlled BP at last measurement,Patients with systolic < 140 and diastolic < 90,Patients with a BP measurement in period,percentage,patient,"sex,age_band,facility_id",WHO PEN,PEN-CVD-3,data team,active
 ```
 
 Tupaia consumes via a Data Table: `select * from {dbt_schema}.metric__hypertension_controlled`. The dashboard chooses which disaggregations to render and which to roll up by filtering on those columns - NULL rows on a disaggregation column are the roll-up.
