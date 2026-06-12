@@ -21,7 +21,7 @@
 
 **Who consumes it?** (downstream models, reports, dashboards, end users)
 
-**Business context:** (programme, country, clinical question being answered)
+**Business context:** (program, country, clinical question being answered)
 
 ## Grain
 
@@ -64,7 +64,7 @@ How recent must input data be for this model to produce valid output? e.g. `base
 Each rule has an ID. Reference these IDs in implementing code (`-- BL-001:`).
 
 - **BL-001:** Exclude soft-deleted records (`deleted_at is null` on bases).
-- **BL-002:** Restrict to patients with active programme registration on the encounter date.
+- **BL-002:** Restrict to patients with active program registration on the encounter date.
 - **BL-003:** _<add edge cases, null handling, dedup strategy, fan-out handling, time-zone handling — each as its own BL>_
 
 ## Acceptance criteria

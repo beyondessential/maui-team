@@ -66,7 +66,7 @@ _Add per-entity sections. Number BL ranges per entity (001–009 for patients, 0
 ### Post-migration
 
 - **DQ-020:** Target row count = source row count − quarantined.
-- **DQ-021:** Reconciliation reports per key entity (counts by date, by facility, by programme).
+- **DQ-021:** Reconciliation reports per key entity (counts by date, by facility, by program).
 - **DQ-022:** Spot-check N records per entity matches source.
 
 ## Cutover plan

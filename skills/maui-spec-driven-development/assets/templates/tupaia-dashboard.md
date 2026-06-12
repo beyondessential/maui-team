@@ -10,7 +10,7 @@
 | **Owner** | `@<github_handle>` |
 | **Linear issue** | [MAUI-XXX](url) |
 | **Country / deployment** | |
-| **Programme** | _e.g. NCD, RMNCH, IDSR_ |
+| **Program** | _e.g. NCD, RMNCH, IDSR_ |
 | **Stakeholders** | _e.g. MoH NCD team, country focal point_ |
 | **Created** | YYYY-MM-DD |
 | **Last updated** | YYYY-MM-DD |
@@ -31,7 +31,7 @@ What questions this dashboard answers. What decisions it supports. Why a static 
 - **Indicators:** _list of metrics displayed_
 - **Geographic granularity:** _country, district, facility, etc._
 - **Temporal granularity:** _daily, monthly, quarterly, annual_
-- **Disaggregation:** _sex, age band, programme, etc._
+- **Disaggregation:** _sex, age group, program, etc._
 - **User-controlled filters:** _date range, facility, etc._
 
 ## Visualisations (panels)

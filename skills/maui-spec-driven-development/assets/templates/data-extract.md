@@ -22,7 +22,7 @@ Why this extract is needed. What decisions or downstream uses it supports. Why a
 
 - **Population:** _which patients / encounters / events?_
 - **Date range:** _from → to (or rolling window)_
-- **Filters:** _active programme, country, facility, age band, etc._
+- **Filters:** _active program, country, facility, age group, etc._
 - **Exclusions:** _test patients, soft-deleted, withdrawn consent, etc._
 
 ## Output schema

@@ -71,7 +71,7 @@ Choose standards based on the repo type:
 | Repo type | Standards |
 |-----------|-----------|
 | `tamanu-dbt-*`, `data-staging` | git, sql, dbt, metadata, tamanu |
-| `tamanu-source-dbt`, `data-lake` | git, sql, dbt, metadata, tamanu, dagster (data-lake only) |
+| `tamanu-source-dbt`, `data-lake` (→ `bes-data-pipelines`) | git, sql, dbt, metadata, tamanu, dagster (`data-lake` / `bes-data-pipelines` only) |
 | `datatools` | git, python, testing |
 
 **3. Create `.github/workflows/claude-code-review.yml`:**

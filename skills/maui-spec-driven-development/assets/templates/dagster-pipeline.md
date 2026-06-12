@@ -9,7 +9,7 @@
 | **Status** | `draft` |
 | **Owner** | `@<github_handle>` |
 | **Linear issue** | [MAUI-XXX](url) |
-| **Repo** | `data-lake` (or other) |
+| **Repo** | `data-lake` (→ `bes-data-pipelines`) or other |
 | **Trigger** | `[schedule \| sensor \| manual \| on-demand]` |
 | **Schedule** | `0 2 * * *` (cron) or N/A |
 | **Created** | YYYY-MM-DD |

@@ -64,7 +64,7 @@ Tamanu reports in production and Tupaia dashboards have complementary roles:
 | **Materialisation** | Views (per the promotion rule) | Incremental tables, or views over incremental tables |
 | **Query complexity** | Generally simple - join cleaned `bases/` models, filter, project | Often heavy - multi-domain joins, window functions, period aggregations |
 | **Freshness** | Live (reads production directly) | Bounded by replica update cadence |
-| **Refs to `ref__` / `lkp__`** | Generally not needed - line lists project from `bases/` directly | `ref__` used for OMOP-shaped joins (care site, location, provider); `lkp__` used for analytic groupings (age bands), cross-system mappings (Tamanu↔Tupaia facility codes) |
+| **Refs to `ref__` / `lkp__`** | Generally not needed - line lists project from `bases/` directly | `ref__` used for OMOP-shaped joins (care site, location, provider); `lkp__` used for analytic groupings (age groups), cross-system mappings (Tamanu↔Tupaia facility codes) |
 | **Audience** | Clinicians and front-line operational users in the Tamanu app | Program managers, MoH stakeholders, executives reading dashboards |
 
 The work that *wants* to be a view (line list extraction) is what ships to production; the work that *wants* to be incremental (heavy aggregation) lives on the replica.
@@ -98,7 +98,7 @@ Creating a `tamanu-dbt-<deployment>` project is a deliberate decision - the cust
 | Case | Action |
 |---|---|
 | Tamanu facility / provider / location data | Flows through `bases/` → `ref__` automatically. No override needed unless the deployment has a schema difference in `public.*` |
-| Standard `lkp__` seed (age bands, modality types, encounter classes) | Override in `tamanu-dbt-<deployment>` only if deployment has truly custom types. Flagged as divergence in review |
+| Standard `lkp__` seed (age groups, modality types, encounter classes) | Override in `tamanu-dbt-<deployment>` only if deployment has truly custom types. Flagged as divergence in review |
 | Cross-system mapping or deployment-specific hierarchy (e.g. `lkp__facility_tupaia_mapping`, `lkp__health_district`) | Define in `tamanu-dbt-<deployment>` - inherently per-deployment |
 | Different survey form, program registry ID, or other local data in a `can__` / `der__` model | Override in `tamanu-dbt-<deployment>` |
 | Genuinely different definition (numerator, denominator, disaggregation) in a `metric__` model | Override AND set `variant_id` on the output to flag the semantic difference (see D5) |

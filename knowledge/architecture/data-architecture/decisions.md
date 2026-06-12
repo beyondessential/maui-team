@@ -267,7 +267,7 @@ Schema (shared across canonical and deployment-specific seeds):
 | Kind | Example | Mechanism | `variant_id` |
 |---|---|---|---|
 | **Implementation difference** | Deployment uses a different survey form for blood pressure but the metric is still "% controlled at 6 months by WHO definition" | dbt package override - deployment repo defines `metric__<id>.sql` with deployment-specific SQL; dbt resolution makes it win | `NULL` - consumers see the same metric, same definition, same number-shape |
-| **Definition variance** | Deployment uses age band 18-69 instead of WHO standard 18-64; numerator includes additional conditions the standard excludes | Same dbt override mechanism, AND set `variant_id` on the output rows to a stable identifier | Deployment-set value (e.g. `fj_moh_2024`) |
+| **Definition variance** | Deployment uses age group 18-69 instead of WHO standard 18-64; numerator includes additional conditions the standard excludes | Same dbt override mechanism, AND set `variant_id` on the output rows to a stable identifier | Deployment-set value (e.g. `fj_moh_2024`) |
 
 The override mechanism is the same; what differs is whether the deployment flags the variation as semantically meaningful. Implementation overrides are invisible by design - that's the point of the package + override pattern. Definition variants are registered in the deployment project's `metric_definitions_<deployment>.csv` with `variant_of = <parent_metric_id>` and a description of what differs. Reviewers check this on PR.
 
