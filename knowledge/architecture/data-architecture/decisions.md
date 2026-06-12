@@ -251,7 +251,7 @@ Schema (shared across canonical and deployment-specific seeds):
 | `numerator_description` | Numerator in words. `NULL` for non-metric kinds |
 | `denominator_description` | Denominator in words. `NULL` for count metrics and non-metric kinds |
 | `data_source` | `tamanu`, `msupply`, `senaite`, `weather`, etc. - which source system the artefact derives from |
-| `definition_source` | Where the definition comes from: external standard name (e.g. `WHO_SMART_HIV`, `WHO_CORE_100`, `SDG`, `DHIS2_HDT`, `MANA`, `GLOBAL_FUND`, `OHDSI`, `IYCF`, `MSF`) or `BES` for internal definitions |
+| `definition_source` | Where the definition comes from: external standard name (e.g. `WHO_SMART_HIV`, `WHO_CORE_100`, `WHO_PEN`, `SDG`, `DHIS2_HDT`, `MANA`, `GLOBAL_FUND`, `OHDSI`, `IYCF`, `MSF`) or `BES` for internal definitions |
 | `definition_source_code` | The standard's own identifier for the indicator if external (e.g. WHO DAK indicator code, SDG code, DHIS2 data element code); `NULL` for `BES` |
 | `definition_rationale` | Short justification - for external standards, why this one over others; for `BES`, why an internal definition rather than an external standard |
 | `unit` | `count`, `percentage`, `rate_per_1000`, etc. `NULL` for non-metric kinds |
@@ -301,8 +301,8 @@ where m.measurement_concept_id in (3004249, 3012888)  -- systolic, diastolic BP
 Corresponding `metric_definitions.csv` row:
 
 ```csv
-metric_id,kind,name,description,numerator_description,denominator_description,unit,subject_grain,disaggregations,definition_source,definition_source_code,owner,status
-hypertension_controlled,metric,Hypertension control rate,Patients with controlled BP at last measurement,Patients with systolic < 140 and diastolic < 90,Patients with a BP measurement in period,percentage,patient,"sex,age_group,facility_id",WHO PEN,PEN-CVD-3,data team,active
+metric_id,kind,name,description,numerator_description,denominator_description,data_source,definition_source,definition_source_code,definition_rationale,unit,subject_grain,disaggregations,variant_of,owner,status,spec_path
+hypertension_controlled,metric,Hypertension control rate,Patients with controlled BP at last measurement,Patients with systolic < 140 and diastolic < 90,Patients with a BP measurement in period,tamanu,WHO_PEN,PEN-CVD-3,WHO Package of Essential NCD Interventions,percentage,patient,"sex,age_group,facility_id",,data team,approved,specs/dbt-model/hypertension_controlled.md
 ```
 
 Tupaia consumes via a Data Table: `select * from {dbt_schema}.metric__hypertension_controlled`. The dashboard chooses which disaggregations to render and which to roll up by filtering on those columns - NULL rows on a disaggregation column are the roll-up.
